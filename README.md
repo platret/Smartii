@@ -56,7 +56,7 @@ and click the ↻ button on the extension card.
 | Shortcut                          | Action                                                     |
 | --------------------------------- | ---------------------------------------------------------- |
 | `Ctrl + Shift + S`                | Toggle Smartii on the active tab                           |
-| `Ctrl + Shift + Enter`            | Screenshot the visible screen + solve immediately          |
+| `Alt + Shift + S`                 | Screenshot the visible screen + solve immediately          |
 | `Enter` in the input              | Send your question (uses page text as context if empty)    |
 | `Ctrl + Enter` in the input       | Send your question **and** attach a screenshot             |
 | `Esc`                             | Close the bar                                              |
