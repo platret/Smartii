@@ -20,13 +20,25 @@ lives only in your browser's sync storage. Smartii has no server.
 
 ## Install (1 minute)
 
-Smartii is shipped as an *unpacked* extension — a folder you load into
-Chrome directly. No store, no review queue.
+Smartii is shipped as an *unpacked* extension. Pick whichever flow you prefer.
 
-1. Download or clone this repo:
-   ```bash
-   git clone https://github.com/platret/Smartii.git
-   ```
+### 🪄 Windows one-click installer (recommended on Windows)
+
+Download **`Install-Smartii.exe`** from the [latest release](https://github.com/platret/Smartii/releases/latest) and double-click.
+
+The installer detects every Chromium browser on your machine (Chrome, Edge,
+Brave, Vivaldi, Opera, Opera GX, Arc, Chromium, Yandex), downloads the
+latest Smartii zip to `%LOCALAPPDATA%\Smartii\`, copies that path to your
+clipboard, and opens the right `chrome://extensions/` page in the browser
+you choose. You finish with one click — *Load unpacked* → `Ctrl+V` → Enter.
+
+> Source: [`installer/Install-Smartii.ps1`](installer/Install-Smartii.ps1). The
+> .exe is the same script bundled with [ps2exe](https://github.com/MScholtes/PS2EXE);
+> nothing more. Audit it, then run.
+
+### 🛠 Manual (any OS)
+
+1. Download the **`Smartii-v*.zip`** from the [latest release](https://github.com/platret/Smartii/releases/latest) and unzip — or `git clone https://github.com/platret/Smartii.git`.
 2. Open Chrome (or any Chromium browser — Edge, Brave, Arc, Opera) and go to
    `chrome://extensions`.
 3. Turn **Developer mode** on (toggle, top-right).
@@ -34,7 +46,8 @@ Chrome directly. No store, no review queue.
 5. The settings page opens automatically. Pick a provider, paste your API
    key, save.
 
-To update later: `git pull` and click the ↻ button on the extension card.
+To update later: `git pull` (or re-run the installer / re-download the zip)
+and click the ↻ button on the extension card.
 
 ---
 
