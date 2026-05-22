@@ -1,0 +1,103 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <title>Smartii — Settings</title>
+    <link rel="stylesheet" href="options.css" />
+  </head>
+  <body>
+    <header class="topbar">
+      <div class="brand">
+        <div class="brand-logo">S</div>
+        <div>
+          <h1>Smartii</h1>
+          <p class="subtitle">Summon an AI at the bottom of your browser.</p>
+        </div>
+      </div>
+      <div class="version">v1.0.0</div>
+    </header>
+
+    <main>
+      <section class="card">
+        <h2>1 · Pick a provider</h2>
+        <p class="muted">
+          Smartii works with free and paid AI providers. Start with a free one
+          (Gemini, Groq, OpenRouter, or Hugging Face) if you've never used an
+          AI API before.
+        </p>
+        <div class="provider-grid" id="providerGrid"></div>
+      </section>
+
+      <section class="card">
+        <h2>2 · Add your API key</h2>
+        <div id="providerHelp" class="help"></div>
+        <label class="field">
+          <span>API key for <strong id="activeProviderLabel">…</strong></span>
+          <input type="password" id="apiKey" placeholder="sk-…  /  AIza…  /  gsk_…" autocomplete="off" />
+        </label>
+        <label class="field">
+          <span>Model (optional — leave blank for default)</span>
+          <select id="model"></select>
+        </label>
+        <p class="muted small">
+          Your API key is stored in your browser's encrypted sync storage and
+          is sent only to the provider you choose. Smartii has no server.
+        </p>
+      </section>
+
+      <section class="card">
+        <h2>3 · Look &amp; feel</h2>
+        <div class="grid-2">
+          <label class="field">
+            <span>Background</span>
+            <select id="theme">
+              <option value="solid">Solid (dark)</option>
+              <option value="clear">Clear (glass/blur)</option>
+            </select>
+          </label>
+          <label class="field">
+            <span>Accent color</span>
+            <input type="color" id="accent" />
+          </label>
+          <label class="field">
+            <span>Width (px)</span>
+            <input type="number" id="width" min="320" max="1400" step="10" />
+          </label>
+          <label class="field">
+            <span>Corner radius (px)</span>
+            <input type="number" id="cornerRadius" min="0" max="40" step="1" />
+          </label>
+          <label class="field">
+            <span>Distance from bottom (px)</span>
+            <input type="number" id="bottomOffset" min="0" max="200" step="2" />
+          </label>
+        </div>
+        <details class="advanced">
+          <summary>Advanced — system prompt</summary>
+          <textarea id="systemPrompt" rows="5"></textarea>
+        </details>
+      </section>
+
+      <section class="card">
+        <h2>4 · Use it</h2>
+        <ul class="kbd-list">
+          <li><kbd>Ctrl</kbd> + <kbd>Shift</kbd> + <kbd>S</kbd> — toggle Smartii on the active tab</li>
+          <li><kbd>Ctrl</kbd> + <kbd>Shift</kbd> + <kbd>Enter</kbd> — screenshot the screen + solve immediately</li>
+          <li><kbd>Esc</kbd> — close the bar</li>
+          <li>Click the <em>📸 Solve</em> button or press <kbd>Ctrl</kbd>+<kbd>Enter</kbd> in the input to capture + solve</li>
+        </ul>
+        <p class="muted small">
+          Change the shortcut at <code>chrome://extensions/shortcuts</code>.
+        </p>
+      </section>
+
+      <div class="actions">
+        <button class="primary" id="save">Save settings</button>
+        <span id="saveStatus" class="muted small"></span>
+      </div>
+    </main>
+
+    <script src="lib/providers.js"></script>
+    <script src="options.js"></script>
+  </body>
+</html>
