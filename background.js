@@ -1,0 +1,102 @@
+// Smartii service worker
+// Responsibilities:
+//   - Handle the Ctrl+Shift+S keybind → tell the active tab to toggle the bar
+//   - Handle Ctrl+Shift+Enter → screenshot + solve immediately
+//   - Capture full-screen screenshots via chrome.tabs.captureVisibleTab
+//   - Proxy provider calls (some providers reject CORS from content scripts)
+
+importScripts("lib/providers.js");
+
+const DEFAULTS = {
+  provider: "gemini",
+  model: "",
+  apiKeys: {},
+  appearance: {
+    theme: "solid",        // "solid" | "clear" (glass)
+    accent: "#7C5CFF",
+    width: 720,
+    cornerRadius: 18,
+    bottomOffset: 24
+  },
+  systemPrompt:
+    "You are Smartii, a fast, helpful assistant. The user pressed a keybind to summon you. If an image of the user's screen is attached, read everything visible (questions, code, errors, UI) and directly solve or answer it. Be concise unless asked otherwise."
+};
+
+async function getSettings() {
+  const stored = await chrome.storage.sync.get(null);
+  return {
+    ...DEFAULTS,
+    ...stored,
+    appearance: { ...DEFAULTS.appearance, ...(stored.appearance || {}) },
+    apiKeys: { ...DEFAULTS.apiKeys, ...(stored.apiKeys || {}) }
+  };
+}
+
+chrome.runtime.onInstalled.addListener(async ({ reason }) => {
+  if (reason === "install") {
+    await chrome.storage.sync.set(DEFAULTS);
+    chrome.runtime.openOptionsPage();
+  }
+});
+
+chrome.action.onClicked.addListener(() => {
+  chrome.runtime.openOptionsPage();
+});
+
+chrome.commands.onCommand.addListener(async (command) => {
+  const [tab] = await chrome.tabs.query({ active: true, currentWindow: true });
+  if (!tab?.id) return;
+  if (command === "toggle-smartii") {
+    sendToTab(tab.id, { type: "TOGGLE" });
+  } else if (command === "solve-now") {
+    sendToTab(tab.id, { type: "SOLVE_NOW" });
+  }
+});
+
+function sendToTab(tabId, msg) {
+  chrome.tabs.sendMessage(tabId, msg).catch(() => {
+    // Content script may not be injected on chrome:// / web store pages.
+  });
+}
+
+chrome.runtime.onMessage.addListener((msg, sender, sendResponse) => {
+  (async () => {
+    try {
+      if (msg.type === "GET_SETTINGS") {
+        sendResponse({ ok: true, settings: await getSettings() });
+        return;
+      }
+      if (msg.type === "CAPTURE_SCREEN") {
+        const dataUrl = await chrome.tabs.captureVisibleTab({ format: "png" });
+        sendResponse({ ok: true, dataUrl });
+        return;
+      }
+      if (msg.type === "SOLVE") {
+        const settings = await getSettings();
+        const providerId = msg.provider || settings.provider;
+        const apiKey = settings.apiKeys[providerId];
+        if (!apiKey) {
+          sendResponse({
+            ok: false,
+            error:
+              "No API key set for " +
+              providerId +
+              ". Open Smartii settings (extension icon) to add one."
+          });
+          return;
+        }
+        const answer = await self.smartiiCallProvider(providerId, apiKey, {
+          prompt: msg.prompt,
+          imageDataUrl: msg.imageDataUrl,
+          model: msg.model || settings.model || undefined
+        });
+        sendResponse({ ok: true, answer });
+        return;
+      }
+      sendResponse({ ok: false, error: "Unknown message type: " + msg.type });
+    } catch (err) {
+      sendResponse({ ok: false, error: err?.message || String(err) });
+    }
+  })();
+  return true; // async
+});
