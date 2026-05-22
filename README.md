@@ -1,3 +1,7 @@
+<p align="center">
+  <img src="icons/banner.png" alt="Smartii — AI at the bottom of your browser" width="100%" />
+</p>
+
 # Smartii
 
 > AI at the bottom of your browser. Press a key, screenshot the screen, get the answer.
@@ -141,9 +145,11 @@ No build step. No bundler. Edit a file, reload the extension.
 
 ## Logo & banner
 
-The repo ships with placeholder icons. To generate the real ones, see
-[`PROMPTS.md`](PROMPTS.md) — it has copy-paste prompts for the logo first,
-then a banner that uses the logo.
+The mascot logo (`icons/logo.png`) and hero banner (`icons/banner.png`) are
+generated. The repo also includes the prompts used to make them in
+[`PROMPTS.md`](PROMPTS.md) — useful if you want to remix the artwork in your
+own style. The toolbar icons (`icon16/32/48/128.png`) are produced from
+`logo.png` with high-quality bicubic downscaling.
 
 ---
 
