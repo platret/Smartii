@@ -32,10 +32,13 @@
     root = document.createElement("div");
     root.id = "smartii-root";
     root.className = "smartii-solid";
+    const logoUrl = chrome.runtime.getURL("icons/icon48.png");
     root.innerHTML = `
       <div class="smartii-card">
         <div class="smartii-row">
-          <div class="smartii-logo">S</div>
+          <div class="smartii-logo">
+            <img src="${logoUrl}" alt="Smartii" />
+          </div>
           <input class="smartii-input" type="text"
                  placeholder="Ask Smartii anything, or hit Solve to read the screen…" />
           <span class="smartii-meta" data-smartii-provider></span>

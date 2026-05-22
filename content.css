@@ -54,17 +54,23 @@
 }
 
 .smartii-logo {
-  width: 28px;
-  height: 28px;
+  width: 32px;
+  height: 32px;
   border-radius: 8px;
-  background: var(--smartii-accent, #7c5cff);
   display: flex;
   align-items: center;
   justify-content: center;
-  color: white;
-  font-weight: 700;
-  font-size: 14px;
   flex-shrink: 0;
+  overflow: hidden;
+}
+
+.smartii-logo img {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  display: block;
+  -webkit-user-drag: none;
+  user-select: none;
 }
 
 .smartii-input {
