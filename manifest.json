@@ -1,7 +1,7 @@
 {
   "manifest_version": 3,
   "name": "Smartii",
-  "version": "1.0.3",
+  "version": "1.0.4",
   "description": "Summon an AI assistant at the bottom of your browser, screenshot the page, and get instant answers from your favorite model.",
   "permissions": [
     "storage",
@@ -49,8 +49,7 @@
     },
     "solve-now": {
       "suggested_key": {
-        "default": "Alt+Shift+S",
-        "mac": "Command+Alt+S"
+        "default": "Alt+Shift+S"
       },
       "description": "Screenshot the page and solve immediately"
     }
