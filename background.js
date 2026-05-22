@@ -39,8 +39,15 @@ chrome.runtime.onInstalled.addListener(async ({ reason }) => {
   }
 });
 
-chrome.action.onClicked.addListener(() => {
-  chrome.runtime.openOptionsPage();
+// Clicking the extension icon toggles the bar on the active tab.
+// If the page is restricted (chrome://, web store, etc.), fall back to opening settings.
+chrome.action.onClicked.addListener(async (tab) => {
+  if (!tab?.id) {
+    chrome.runtime.openOptionsPage();
+    return;
+  }
+  const ok = await sendToTab(tab.id, { type: "TOGGLE" });
+  if (!ok) chrome.runtime.openOptionsPage();
 });
 
 chrome.commands.onCommand.addListener(async (command) => {
@@ -53,10 +60,33 @@ chrome.commands.onCommand.addListener(async (command) => {
   }
 });
 
-function sendToTab(tabId, msg) {
-  chrome.tabs.sendMessage(tabId, msg).catch(() => {
-    // Content script may not be injected on chrome:// / web store pages.
-  });
+// Try to deliver a message to the content script. If it isn't loaded
+// (the user installed Smartii after this tab was already open, or
+// chrome navigated since), inject it programmatically and retry.
+// Returns true on success, false if the page can't host extensions.
+async function sendToTab(tabId, msg) {
+  try {
+    await chrome.tabs.sendMessage(tabId, msg);
+    return true;
+  } catch (_) {
+    // Content script wasn't there. Inject it.
+  }
+  try {
+    await chrome.scripting.insertCSS({
+      target: { tabId },
+      files: ["content.css"]
+    });
+    await chrome.scripting.executeScript({
+      target: { tabId },
+      files: ["content.js"]
+    });
+    await chrome.tabs.sendMessage(tabId, msg);
+    return true;
+  } catch (err) {
+    // chrome://, chrome-extension://, Web Store, or similar restricted URL.
+    console.warn("[Smartii] cannot run on this page:", err?.message || err);
+    return false;
+  }
 }
 
 chrome.runtime.onMessage.addListener((msg, sender, sendResponse) => {
@@ -64,6 +94,11 @@ chrome.runtime.onMessage.addListener((msg, sender, sendResponse) => {
     try {
       if (msg.type === "GET_SETTINGS") {
         sendResponse({ ok: true, settings: await getSettings() });
+        return;
+      }
+      if (msg.type === "OPEN_OPTIONS") {
+        chrome.runtime.openOptionsPage();
+        sendResponse({ ok: true });
         return;
       }
       if (msg.type === "CAPTURE_SCREEN") {
