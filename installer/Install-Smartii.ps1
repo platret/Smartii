@@ -38,22 +38,87 @@ $BrowserCatalog = @(
     @{ Name = "Arc";            Paths = @("$lad\Programs\Arc\Arc.exe"); Scheme = "chrome" }
     @{ Name = "Chromium";       Paths = @("$pf\Chromium\Application\chrome.exe", "$lad\Chromium\Application\chrome.exe"); Scheme = "chrome" }
     @{ Name = "Yandex";         Paths = @("$lad\Yandex\YandexBrowser\Application\browser.exe"); Scheme = "browser" }
+    @{ Name = "Helium";         Paths = @("$lad\Programs\Helium\helium.exe", "$lad\Programs\Helium\Helium.exe", "$pf\Helium\helium.exe", "$pf\Helium\Application\helium.exe", "$lad\Helium\Application\helium.exe"); Scheme = "chrome" }
+    @{ Name = "Thorium";        Paths = @("$lad\Thorium\Application\thorium.exe", "$pf\Thorium\Application\thorium.exe"); Scheme = "chrome" }
+    @{ Name = "SRWare Iron";    Paths = @("$pf\SRWare Iron\iron.exe", "$pfx\SRWare Iron\iron.exe"); Scheme = "chrome" }
 )
+
+# Friendly names for binaries we recognise from the registry sweep
+$BinaryNameMap = @{
+    'chrome.exe'  = @{ Name = 'Google Chrome';  Scheme = 'chrome'   }
+    'msedge.exe'  = @{ Name = 'Microsoft Edge'; Scheme = 'edge'     }
+    'brave.exe'   = @{ Name = 'Brave';          Scheme = 'brave'    }
+    'vivaldi.exe' = @{ Name = 'Vivaldi';        Scheme = 'vivaldi'  }
+    'opera.exe'   = @{ Name = 'Opera';          Scheme = 'opera'    }
+    'arc.exe'     = @{ Name = 'Arc';            Scheme = 'chrome'   }
+    'helium.exe'  = @{ Name = 'Helium';         Scheme = 'chrome'   }
+    'thorium.exe' = @{ Name = 'Thorium';        Scheme = 'chrome'   }
+    'iron.exe'    = @{ Name = 'SRWare Iron';    Scheme = 'chrome'   }
+    'browser.exe' = @{ Name = 'Yandex';         Scheme = 'browser'  }
+}
+
+function Find-FromRegistry {
+    $results = New-Object System.Collections.Generic.List[object]
+    $keys = @(
+        'HKLM:\SOFTWARE\Clients\StartMenuInternet',
+        'HKLM:\SOFTWARE\WOW6432Node\Clients\StartMenuInternet',
+        'HKCU:\SOFTWARE\Clients\StartMenuInternet'
+    )
+    foreach ($k in $keys) {
+        if (-not (Test-Path $k)) { continue }
+        Get-ChildItem $k -ErrorAction SilentlyContinue | ForEach-Object {
+            $cmdKey = Join-Path $_.PSPath 'shell\open\command'
+            if (-not (Test-Path $cmdKey)) { return }
+            $raw = (Get-ItemProperty -Path $cmdKey -ErrorAction SilentlyContinue).'(default)'
+            if (-not $raw) { return }
+            $exe = $raw.Trim()
+            if ($exe.StartsWith('"')) {
+                $exe = ($exe -split '"')[1]
+            } else {
+                $exe = ($exe -split ' ')[0]
+            }
+            if (-not (Test-Path $exe)) { return }
+
+            $exeName = (Split-Path $exe -Leaf).ToLower()
+            # Skip non-Chromium browsers
+            if ($exeName -in @('iexplore.exe', 'firefox.exe', 'safari.exe', 'waterfox.exe', 'librewolf.exe')) { return }
+
+            $known = $BinaryNameMap[$exeName]
+            $displayName = if ($known) { $known.Name } else { $_.PSChildName }
+            $scheme      = if ($known) { $known.Scheme } else { 'chrome' }
+
+            $results.Add([pscustomobject]@{
+                Name   = $displayName
+                Path   = $exe
+                Scheme = $scheme
+            })
+        }
+    }
+    return $results
+}
 
 function Find-InstalledBrowsers {
     $found = New-Object System.Collections.Generic.List[object]
+    $seen = New-Object System.Collections.Generic.HashSet[string]
+
     foreach ($b in $BrowserCatalog) {
         foreach ($p in $b.Paths) {
             if ($p -and (Test-Path $p)) {
-                $found.Add([pscustomobject]@{
-                    Name   = $b.Name
-                    Path   = $p
-                    Scheme = $b.Scheme
-                })
+                $key = $p.ToLower()
+                if ($seen.Add($key)) {
+                    $found.Add([pscustomobject]@{ Name = $b.Name; Path = $p; Scheme = $b.Scheme })
+                }
                 break
             }
         }
     }
+
+    # Anything else registered with Windows as a browser (catches Helium and unknown forks)
+    foreach ($r in Find-FromRegistry) {
+        $key = $r.Path.ToLower()
+        if ($seen.Add($key)) { $found.Add($r) }
+    }
+
     return $found
 }
 
@@ -134,35 +199,45 @@ $header.Add_Paint({
     $brush.Dispose()
 })
 
-$logoTile = New-Object System.Windows.Forms.Panel
+function Get-LogoBitmap {
+    # 1) When running as the compiled .exe, extract its own embedded Smartii icon.
+    try {
+        $exe = [System.Diagnostics.Process]::GetCurrentProcess().MainModule.FileName
+        $exeLower = $exe.ToLower()
+        $isHostShell = $exeLower -match '\\(powershell|pwsh|powershell_ise)\.exe$'
+        if ($exe -and (Test-Path $exe) -and -not $isHostShell) {
+            $ico = [System.Drawing.Icon]::ExtractAssociatedIcon($exe)
+            if ($ico) { return $ico.ToBitmap() }
+        }
+    } catch {}
+
+    # 2) When running the .ps1 from the repo, fall back to the sibling icon file.
+    try {
+        $scriptDir = $PSScriptRoot
+        if (-not $scriptDir -and $MyInvocation.MyCommand.Path) {
+            $scriptDir = Split-Path -Parent $MyInvocation.MyCommand.Path
+        }
+        if ($scriptDir) {
+            foreach ($rel in @('..\icons\icon128.png', '..\icons\logo.png', 'icon128.png')) {
+                $p = Join-Path $scriptDir $rel
+                if (Test-Path $p) {
+                    return [System.Drawing.Bitmap]::FromFile((Resolve-Path $p).Path)
+                }
+            }
+        }
+    } catch {}
+
+    return $null
+}
+
+$logoTile = New-Object System.Windows.Forms.PictureBox
 $logoTile.Size = New-Object System.Drawing.Size(56, 56)
 $logoTile.Location = New-Object System.Drawing.Point(22, 17)
+$logoTile.SizeMode = [System.Windows.Forms.PictureBoxSizeMode]::Zoom
 $logoTile.BackColor = $BrandCard
+$logoBmp = Get-LogoBitmap
+if ($logoBmp) { $logoTile.Image = $logoBmp }
 $header.Controls.Add($logoTile)
-$logoTile.Add_Paint({
-    param($sender, $e)
-    $g = $e.Graphics
-    $g.SmoothingMode = [System.Drawing.Drawing2D.SmoothingMode]::AntiAlias
-    $g.TextRenderingHint = [System.Drawing.Text.TextRenderingHint]::AntiAlias
-    $rect = New-Object System.Drawing.Rectangle 0, 0, $sender.Width, $sender.Height
-    $brush = New-Object System.Drawing.Drawing2D.LinearGradientBrush $rect, $BrandAccent, $BrandAcc2, ([float]45)
-    $path = New-Object System.Drawing.Drawing2D.GraphicsPath
-    $r = 12; $d = $r * 2
-    $path.AddArc(0, 0, $d, $d, 180, 90)
-    $path.AddArc($sender.Width - $d, 0, $d, $d, 270, 90)
-    $path.AddArc($sender.Width - $d, $sender.Height - $d, $d, $d, 0, 90)
-    $path.AddArc(0, $sender.Height - $d, $d, $d, 90, 90)
-    $path.CloseFigure()
-    $g.FillPath($brush, $path)
-    $font = New-Object System.Drawing.Font 'Segoe UI', 28, [System.Drawing.FontStyle]::Bold, [System.Drawing.GraphicsUnit]::Pixel
-    $sf = New-Object System.Drawing.StringFormat
-    $sf.Alignment = [System.Drawing.StringAlignment]::Center
-    $sf.LineAlignment = [System.Drawing.StringAlignment]::Center
-    $white = New-Object System.Drawing.SolidBrush ([System.Drawing.Color]::White)
-    $textRect = New-Object System.Drawing.RectangleF 0, -2, ([float]$sender.Width), ([float]$sender.Height)
-    $g.DrawString('S', $font, $white, $textRect, $sf)
-    $brush.Dispose(); $path.Dispose(); $font.Dispose(); $white.Dispose()
-})
 
 $title = New-Object System.Windows.Forms.Label
 $title.Text = "Smartii"
@@ -211,13 +286,36 @@ $form.Controls.Add($browserBox)
 $y += 38
 
 $browsers = Find-InstalledBrowsers
-if ($browsers.Count -eq 0) {
-    $browserBox.Items.Add("No Chromium browsers detected") | Out-Null
-    $browserBox.Enabled = $false
-} else {
-    foreach ($b in $browsers) { $browserBox.Items.Add($b.Name) | Out-Null }
-    $browserBox.SelectedIndex = 0
+$BROWSE_LABEL = "Other... (browse for a browser .exe)"
+
+foreach ($b in $browsers) {
+    $browserBox.Items.Add($b.Name + "   -   " + $b.Path) | Out-Null
 }
+$browserBox.Items.Add($BROWSE_LABEL) | Out-Null
+if ($browsers.Count -gt 0) { $browserBox.SelectedIndex = 0 } else { $browserBox.SelectedIndex = 0 }
+
+$browserBox.Add_SelectedIndexChanged({
+    if ($browserBox.SelectedItem -ne $BROWSE_LABEL) { return }
+    $dlg = New-Object System.Windows.Forms.OpenFileDialog
+    $dlg.Title = "Pick your browser's main .exe"
+    $dlg.Filter = "Executables (*.exe)|*.exe"
+    $dlg.InitialDirectory = $env:LOCALAPPDATA
+    if ($dlg.ShowDialog() -eq [System.Windows.Forms.DialogResult]::OK) {
+        $exe = $dlg.FileName
+        $name = (Split-Path $exe -Leaf)
+        $known = $BinaryNameMap[$name.ToLower()]
+        $displayName = if ($known) { $known.Name } else { [System.IO.Path]::GetFileNameWithoutExtension($exe) }
+        $scheme      = if ($known) { $known.Scheme } else { 'chrome' }
+        $entry = [pscustomobject]@{ Name = $displayName; Path = $exe; Scheme = $scheme }
+        $browsers.Add($entry)
+        $insertAt = $browserBox.Items.Count - 1
+        $browserBox.Items.Insert($insertAt, ($entry.Name + "   -   " + $entry.Path))
+        $browserBox.SelectedIndex = $insertAt
+    } else {
+        # User cancelled - drop back to the first real entry if any, otherwise leave on Browse
+        if ($browsers.Count -gt 0) { $browserBox.SelectedIndex = 0 }
+    }
+})
 
 Add-Label "2.  Install location" 10 $BrandText $true | Out-Null
 $pathLabel = New-Object System.Windows.Forms.TextBox
@@ -277,9 +375,9 @@ function Write-Status([string]$msg) {
 
 # --- install action ---
 $installBtn.Add_Click({
-    if ($browsers.Count -eq 0) {
+    if ($browserBox.SelectedItem -eq $BROWSE_LABEL -or $browsers.Count -eq 0) {
         [System.Windows.Forms.MessageBox]::Show(
-            "No Chromium browsers were detected. Install Chrome, Edge, Brave, Opera, or Vivaldi first.",
+            "Pick an installed browser from the list first, or use 'Other...' to point at your browser's .exe.",
             "Smartii Installer", "OK", "Warning") | Out-Null
         return
     }
