@@ -36,6 +36,27 @@ you choose. You finish with one click — *Load unpacked* → `Ctrl+V` → Enter
 > .exe is the same script bundled with [ps2exe](https://github.com/MScholtes/PS2EXE);
 > nothing more. Audit it, then run.
 
+### 🍎 macOS one-click installer (recommended on Mac)
+
+Download **`Install-Smartii.app.zip`** from the [latest release](https://github.com/platret/Smartii/releases/latest), unzip it, and double-click **`Install-Smartii.app`**.
+
+The installer detects every Chromium browser in `/Applications` (Chrome, Edge,
+Brave, Arc, Vivaldi, Opera, Opera GX, Chromium, Yandex, Helium, Thorium,
+Comet, Dia, Chrome Beta/Dev/Canary), downloads the latest Smartii zip to
+`~/Library/Application Support/Smartii/`, copies that path to your
+clipboard, and opens the right `chrome://extensions/` page in the browser
+you choose. You finish with — *Load unpacked* → `⌘V` → Return.
+
+> First-launch Gatekeeper warning: the app is unsigned, so macOS will
+> refuse to open it the normal way. Either **right-click → Open → Open**,
+> or strip the quarantine flag once with
+> `xattr -dr com.apple.quarantine /path/to/Install-Smartii.app`.
+
+> Source: [`installer/install-smartii.sh`](installer/install-smartii.sh).
+> The .app is just that script wrapped in a tiny bundle (Info.plist + icon)
+> — no compiled binaries, no network listeners. Rebuild with
+> `bash installer/build-mac-app.sh`.
+
 ### 🛠 Manual (any OS)
 
 1. Download the **`Smartii-v*.zip`** from the [latest release](https://github.com/platret/Smartii/releases/latest) and unzip — or `git clone https://github.com/platret/Smartii.git`.
@@ -53,13 +74,13 @@ and click the ↻ button on the extension card.
 
 ## Usage
 
-| Shortcut                          | Action                                                     |
-| --------------------------------- | ---------------------------------------------------------- |
-| `Ctrl + Shift + S`                | Toggle Smartii on the active tab                           |
-| `Alt + Shift + S`                 | Screenshot the visible screen + solve immediately          |
-| `Enter` in the input              | Send your question (uses page text as context if empty)    |
-| `Ctrl + Enter` in the input       | Send your question **and** attach a screenshot             |
-| `Esc`                             | Close the bar                                              |
+| Shortcut (Win/Linux)              | Shortcut (Mac)                       | Action                                                     |
+| --------------------------------- | ------------------------------------ | ---------------------------------------------------------- |
+| `Ctrl + Shift + S`                | `⌘ + Shift + S`                      | Toggle Smartii on the active tab                           |
+| `Alt + Shift + S`                 | `⌥ + Shift + S`                      | Screenshot the visible screen + solve immediately          |
+| `Enter` in the input              | `Return` in the input                | Send your question (uses page text as context if empty)    |
+| `Ctrl + Enter` in the input       | `⌘ + Return` in the input            | Send your question **and** attach a screenshot             |
+| `Esc`                             | `Esc`                                | Close the bar                                              |
 
 Change any shortcut at `chrome://extensions/shortcuts`.
 
