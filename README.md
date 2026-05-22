@@ -109,6 +109,40 @@ Click the Smartii icon in the toolbar (or use `chrome://extensions` →
 
 ---
 
+## Troubleshooting
+
+### The keybind does nothing
+
+Most common cause: Chrome doesn't always assign suggested shortcuts on
+first install, especially when an extension was reloaded after a manifest
+fix. Check `chrome://extensions/shortcuts` — find **Smartii**, and if the
+boxes next to "Toggle Smartii" or "Screenshot the page and solve" are
+empty, click the pencil and press your shortcut to bind it.
+
+If shortcuts are assigned but nothing happens on certain pages: Smartii
+can't run on `chrome://`, `chrome-extension://`, the Web Store, or the
+New Tab page — Chrome forbids extensions from injecting on those URLs.
+Try a regular website (e.g. github.com) to verify.
+
+You can also **click the Smartii icon in the toolbar** to toggle the bar.
+That uses the same code path as the keybind and works on any page that
+allows extensions.
+
+### "Failed to load extension … invalid value for commands"
+
+That means the `manifest.json` declares a keyboard shortcut Chrome's
+`commands` API doesn't accept. `Enter`, `Tab`, `Escape` and (on Mac) most
+non-Command/MacCtrl modifiers are rejected even if they're in the `default`
+field of a different platform. Make sure you're on the latest release —
+this was fixed in v1.0.4.
+
+### Nothing came back from the model
+
+Open the extension's service-worker console:
+`chrome://extensions` → Smartii → *Inspect views: service worker*. The
+error from the provider (invalid key, rate limit, model not found) is
+printed there. The bar also displays it.
+
 ## How it works
 
 ```
