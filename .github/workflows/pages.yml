@@ -20,22 +20,25 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+        with:
+          # Use a PAT instead of the auto GITHUB_TOKEN — the auto-token returns
+          # 403 "account suspended" for this account even though browse + push work fine.
+          token: ${{ secrets.DEPLOY_PAT }}
       - name: Push docs/ to gh-pages branch
         env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          DEPLOY_PAT: ${{ secrets.DEPLOY_PAT }}
         run: |
           set -euo pipefail
           git config user.name  "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
 
-          # Stage docs/ contents in a temp dir, then push as the entire gh-pages tree.
           WORK="$(mktemp -d)"
           cp -R docs/. "$WORK/"
           touch "$WORK/.nojekyll"
 
           cd "$WORK"
           git init -q -b gh-pages
-          git remote add origin "https://x-access-token:${GITHUB_TOKEN}@github.com/${GITHUB_REPOSITORY}.git"
+          git remote add origin "https://x-access-token:${DEPLOY_PAT}@github.com/${GITHUB_REPOSITORY}.git"
           git add -A
           git commit -q -m "deploy: ${GITHUB_SHA::7}"
           git push -f -q origin gh-pages
