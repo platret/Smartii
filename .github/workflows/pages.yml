@@ -29,15 +29,14 @@ jobs:
           DEPLOY_PAT: ${{ secrets.DEPLOY_PAT }}
         run: |
           set -euo pipefail
-          git config user.name  "github-actions[bot]"
-          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-
           WORK="$(mktemp -d)"
           cp -R docs/. "$WORK/"
           touch "$WORK/.nojekyll"
 
           cd "$WORK"
           git init -q -b gh-pages
+          git config user.name  "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
           git remote add origin "https://x-access-token:${DEPLOY_PAT}@github.com/${GITHUB_REPOSITORY}.git"
           git add -A
           git commit -q -m "deploy: ${GITHUB_SHA::7}"
