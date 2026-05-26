@@ -78,6 +78,7 @@ and click the ↻ button on the extension card.
 | --------------------------------- | ------------------------------------ | ---------------------------------------------------------- |
 | `Ctrl + Shift + S`                | `⌘ + Shift + S`                      | Toggle Smartii on the active tab                           |
 | `Alt + Shift + S`                 | `⌥ + Shift + S`                      | Screenshot the visible screen + solve immediately          |
+| `Ctrl + Shift + G`                | `⌘ + Shift + G`                      | **⚡ Godmode** — auto-solve everything visible (Pro)         |
 | `Enter` in the input              | `Return` in the input                | Send your question (uses page text as context if empty)    |
 | `Ctrl + Enter` in the input       | `⌘ + Return` in the input            | Send your question **and** attach a screenshot             |
 | `Esc`                             | `Esc`                                | Close the bar                                              |
@@ -201,8 +202,37 @@ No build step. No bundler. Edit a file, reload the extension.
 
 ---
 
+## ⚡ Smartii Pro & Godmode
+
+**Free Smartii** = the bar + screenshot solving + 7 providers, BYO API key. Forever.
+
+**Smartii Pro ($4.99/mo)** adds:
+
+- **Godmode** (`Ctrl+Shift+G`) — one keybind, no typing needed. Smartii reads the
+  full screen, identifies every question/problem/error on it, and answers them all directly.
+- Cloud sync of settings across browsers (planned).
+- Priority rollouts of new providers.
+
+Sign up at [smartii.app](https://platret.github.io/Smartii/#pricing) or click *Upgrade*
+on the extension's settings page.
+
+### Self-hosting the Pro backend
+
+Both the landing site and Pro entitlement check live in this repo and you can run them
+yourself if you want to fork Smartii.
+
+- **Landing site** — `docs/`, deployed to GitHub Pages via `.github/workflows/pages.yml`.
+  Edit `docs/config.js` with your Supabase URL + Stripe Pricing Table ID, push, done.
+- **Backend** — `supabase/`. Migrations + a Stripe webhook Edge Function.
+  Full setup steps in [`supabase/README.md`](supabase/README.md).
+- **Extension** — fill `lib/config.js` with your Supabase URL + anon key. With those
+  blank, Godmode is locked but everything else works.
+
+---
+
 ## Roadmap
 
+- [x] **Godmode** — auto-solve everything on the screen with one keybind (Pro)
 - [ ] Streaming responses
 - [ ] Conversation history per tab
 - [ ] Region screenshot (drag-to-select)

@@ -59,6 +59,7 @@
                  placeholder="Ask Smartii anything, or hit Solve to read the screen..." />
           <span class="smartii-meta" data-smartii-provider></span>
           <button class="smartii-btn smartii-ghost" data-smartii-snap title="Screenshot the page + solve">Solve</button>
+          <button class="smartii-btn smartii-god" data-smartii-god title="Godmode — auto-solve everything (Pro)">⚡ God</button>
           <button class="smartii-btn" data-smartii-send title="Send (Enter)">Send</button>
           <button class="smartii-btn smartii-ghost" data-smartii-settings title="Settings">&#9881;</button>
           <button class="smartii-btn smartii-ghost" data-smartii-close title="Close (Esc)">&times;</button>
@@ -97,6 +98,12 @@
 
     sendBtn.addEventListener("click", () => solve(false));
     snapBtn.addEventListener("click", () => solve(true));
+    const godBtn = root.querySelector("[data-smartii-god]");
+    godBtn?.addEventListener("click", async () => {
+      const res = await chrome.runtime.sendMessage({ type: "CHECK_PRO" });
+      if (res?.pro?.active) godmode();
+      else godmodeLocked(res?.pro?.reason || "unknown");
+    });
     settingsBtn.addEventListener("click", () => {
       chrome.runtime.sendMessage({ type: "OPEN_OPTIONS" });
     });
@@ -235,6 +242,75 @@
 
   // --- message routing ---
 
+  async function godmode() {
+    if (!settings) await loadSettings();
+    if (!root) build();
+    if (input) input.value = "";
+    // Godmode prompt: pure auto-solve, no user input. Tells the model to read
+    // EVERYTHING on screen and answer directly — useful for quizzes, homework,
+    // code traces, error dialogs, anything visible.
+    const godPrompt =
+      "GODMODE: read the entire attached screenshot of the user's screen. " +
+      "Identify the most important question, problem, code, error, or task on screen and " +
+      "answer it directly and completely. If there are multiple questions, answer all of them, " +
+      "numbered. If it's a multiple-choice question, give the correct letter AND the reasoning. " +
+      "If it's code or an error, show the fix. Be precise. No filler.";
+    await solveWithPrompt(godPrompt, true);
+  }
+
+  // Variant of solve() that takes a pre-built prompt and skips reading the input box.
+  async function solveWithPrompt(prompt, includeScreenshot) {
+    if (pendingRequest) return;
+    if (!settings) await loadSettings();
+    if (!root) build();
+
+    pendingRequest = true;
+    setOutput("");
+    setStatus("");
+    hideBar();
+    showPill();
+
+    try {
+      let imageDataUrl;
+      if (includeScreenshot) {
+        await new Promise((r) => setTimeout(r, 220));
+        imageDataUrl = await captureScreen();
+      }
+      const res = await chrome.runtime.sendMessage({
+        type: "SOLVE",
+        prompt,
+        imageDataUrl,
+        provider: settings.provider,
+        model: settings.model
+      });
+      pendingRequest = false;
+      hidePill();
+      if (!res?.ok) throw new Error(res?.error || "unknown error");
+      openBar();
+      setStatus("");
+      setOutput(res.answer);
+    } catch (err) {
+      pendingRequest = false;
+      hidePill();
+      openBar();
+      setStatus("");
+      setOutput("Error: " + (err?.message || String(err)));
+    }
+  }
+
+  function godmodeLocked(reason) {
+    if (!root) build();
+    openBar();
+    setStatus("");
+    const reasons = {
+      signed_out: "Godmode needs a Smartii Pro account. Open settings → Sign in.",
+      no_entitlement: "Godmode is a Pro feature. Upgrade at smartii.app.",
+      unconfigured: "Godmode is not configured in this build.",
+      network_error: "Couldn't verify Pro status — check your connection."
+    };
+    setOutput(reasons[reason] || "Godmode is unavailable (" + reason + ").");
+  }
+
   chrome.runtime.onMessage.addListener((msg) => {
     if (msg.type === "TOGGLE") {
       if (!settings) loadSettings().then(toggle);
@@ -242,6 +318,10 @@
     } else if (msg.type === "SOLVE_NOW") {
       if (!settings) loadSettings().then(() => solve(true));
       else solve(true);
+    } else if (msg.type === "GODMODE") {
+      godmode();
+    } else if (msg.type === "GODMODE_LOCKED") {
+      godmodeLocked(msg.reason);
     } else if (msg.type === "SETTINGS_UPDATED") {
       loadSettings();
     }

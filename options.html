@@ -16,7 +16,7 @@
           <p class="subtitle">Summon an AI at the bottom of your browser.</p>
         </div>
       </div>
-      <div class="version">v1.0.6</div>
+      <div class="version">v1.1.0</div>
     </header>
 
     <main>
@@ -80,11 +80,43 @@
         </details>
       </section>
 
+      <section class="card pro-card">
+        <h2>4 · Smartii Pro <span class="pro-badge">⚡ Godmode</span></h2>
+        <p class="muted">
+          Pro unlocks <strong>Godmode</strong> (one keybind, no typing — Smartii
+          reads the screen and answers everything automatically) and cloud sync
+          across browsers. Sign in with your email and we send a magic link.
+        </p>
+        <div id="proSignedOut">
+          <label class="field">
+            <span>Email</span>
+            <input type="email" id="proEmail" placeholder="you@example.com" autocomplete="email" />
+          </label>
+          <div class="pro-actions">
+            <button class="primary" id="proSignIn">Send magic link</button>
+            <a class="link-btn" id="proUpgrade" target="_blank" rel="noopener">Upgrade →</a>
+          </div>
+          <p class="muted small" id="proStatus"></p>
+        </div>
+        <div id="proSignedIn" hidden>
+          <p>
+            Signed in as <strong id="proEmailLabel"></strong> ·
+            <span id="proPlanLabel" class="muted small"></span>
+          </p>
+          <div class="pro-actions">
+            <button class="primary" id="proRefresh">Refresh status</button>
+            <a class="link-btn" id="proManage" target="_blank" rel="noopener">Manage subscription</a>
+            <button class="link-btn danger" id="proSignOut">Sign out</button>
+          </div>
+        </div>
+      </section>
+
       <section class="card">
-        <h2>4 · Use it</h2>
+        <h2>5 · Use it</h2>
         <ul class="kbd-list">
           <li><kbd>Ctrl</kbd> + <kbd>Shift</kbd> + <kbd>S</kbd> <span class="muted small">(<kbd>⌘</kbd>+<kbd>Shift</kbd>+<kbd>S</kbd> on Mac)</span> — toggle Smartii on the active tab</li>
           <li><kbd>Alt</kbd> + <kbd>Shift</kbd> + <kbd>S</kbd> <span class="muted small">(<kbd>⌥</kbd>+<kbd>Shift</kbd>+<kbd>S</kbd> on Mac)</span> — screenshot the screen + solve immediately</li>
+          <li><kbd>Ctrl</kbd> + <kbd>Shift</kbd> + <kbd>G</kbd> <span class="muted small">(<kbd>⌘</kbd>+<kbd>Shift</kbd>+<kbd>G</kbd> on Mac)</span> — <strong>Godmode</strong>: auto-solve everything on screen (Pro)</li>
           <li><kbd>Esc</kbd> — close the bar</li>
           <li>Click the <em>📸 Solve</em> button or press <kbd>Ctrl</kbd>+<kbd>Enter</kbd> <span class="muted small">(or <kbd>⌘</kbd>+<kbd>Enter</kbd> on Mac)</span> in the input to capture + solve</li>
         </ul>
@@ -99,6 +131,7 @@
       </div>
     </main>
 
+    <script src="lib/config.js"></script>
     <script src="lib/providers.js"></script>
     <script src="options.js"></script>
   </body>

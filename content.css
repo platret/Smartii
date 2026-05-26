@@ -119,6 +119,17 @@
   background: rgba(255, 255, 255, 0.08);
 }
 
+.smartii-btn.smartii-god {
+  background: linear-gradient(135deg, #ffb86b 0%, #ff5e9c 55%, #7c5cff 100%);
+  color: #fff;
+  font-weight: 700;
+  box-shadow: 0 4px 14px rgba(255, 94, 156, 0.35);
+}
+
+.smartii-btn.smartii-god:hover {
+  filter: brightness(1.08) saturate(1.05);
+}
+
 .smartii-output {
   max-height: 340px;
   overflow-y: auto;

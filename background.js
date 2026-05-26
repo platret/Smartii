@@ -1,11 +1,15 @@
 // Smartii service worker
 // Responsibilities:
 //   - Handle the Ctrl+Shift+S keybind → tell the active tab to toggle the bar
-//   - Handle Ctrl+Shift+Enter → screenshot + solve immediately
+//   - Handle Alt+Shift+S → screenshot + solve immediately
+//   - Handle Ctrl+Shift+G → Godmode (Pro): auto-solve everything visible, no input needed
 //   - Capture full-screen screenshots via chrome.tabs.captureVisibleTab
 //   - Proxy provider calls (some providers reject CORS from content scripts)
+//   - Verify Pro entitlement against the smartii.app backend (Supabase)
 
+importScripts("lib/config.js");
 importScripts("lib/providers.js");
+importScripts("lib/entitlement.js");
 
 const DEFAULTS = {
   provider: "gemini",
@@ -57,6 +61,13 @@ chrome.commands.onCommand.addListener(async (command) => {
     sendToTab(tab.id, { type: "TOGGLE" });
   } else if (command === "solve-now") {
     sendToTab(tab.id, { type: "SOLVE_NOW" });
+  } else if (command === "godmode") {
+    const pro = await self.smartiiCheckPro();
+    if (!pro.active) {
+      sendToTab(tab.id, { type: "GODMODE_LOCKED", reason: pro.reason });
+      return;
+    }
+    sendToTab(tab.id, { type: "GODMODE" });
   }
 });
 
@@ -126,6 +137,19 @@ chrome.runtime.onMessage.addListener((msg, sender, sendResponse) => {
           model: msg.model || settings.model || undefined
         });
         sendResponse({ ok: true, answer });
+        return;
+      }
+      if (msg.type === "CHECK_PRO") {
+        sendResponse({ ok: true, pro: await self.smartiiCheckPro({ force: msg.force }) });
+        return;
+      }
+      if (msg.type === "SIGN_IN") {
+        sendResponse(await self.smartiiSignIn(msg.email));
+        return;
+      }
+      if (msg.type === "SIGN_OUT") {
+        await self.smartiiSignOut();
+        sendResponse({ ok: true });
         return;
       }
       sendResponse({ ok: false, error: "Unknown message type: " + msg.type });

@@ -113,8 +113,61 @@ async function save() {
   setTimeout(() => (s.textContent = ""), 1800);
 }
 
+// --- Smartii Pro UI ---
+
+async function loadProSection() {
+  const site = (window.SMARTII_CONFIG && window.SMARTII_CONFIG.SITE_URL) || "https://platret.github.io/Smartii/";
+  const upgrade = $("#proUpgrade");
+  const manage = $("#proManage");
+  if (upgrade) upgrade.href = site + "#pricing";
+  if (manage) manage.href = site + "#account";
+
+  const res = await chrome.runtime.sendMessage({ type: "CHECK_PRO" });
+  const pro = res?.pro || { active: false, reason: "unknown" };
+  const session = await chrome.storage.local.get("smartiiSession");
+  const email = session?.smartiiSession?.user?.email;
+
+  if (email) {
+    $("#proSignedOut").hidden = true;
+    $("#proSignedIn").hidden = false;
+    $("#proEmailLabel").textContent = email;
+    $("#proPlanLabel").textContent = pro.active
+      ? `Pro · ${pro.plan || "active"}`
+      : `Free · ${pro.reason || "no entitlement"}`;
+  } else {
+    $("#proSignedOut").hidden = false;
+    $("#proSignedIn").hidden = true;
+  }
+}
+
+function bindProInputs() {
+  $("#proSignIn")?.addEventListener("click", async () => {
+    const email = $("#proEmail").value.trim();
+    if (!email) {
+      $("#proStatus").textContent = "Enter your email first.";
+      return;
+    }
+    $("#proStatus").textContent = "Sending…";
+    const res = await chrome.runtime.sendMessage({ type: "SIGN_IN", email });
+    $("#proStatus").textContent = res?.ok ? res.message : (res?.error || "Failed.");
+  });
+  $("#proSignOut")?.addEventListener("click", async () => {
+    await chrome.runtime.sendMessage({ type: "SIGN_OUT" });
+    await loadProSection();
+  });
+  $("#proRefresh")?.addEventListener("click", async () => {
+    const res = await chrome.runtime.sendMessage({ type: "CHECK_PRO", force: true });
+    const pro = res?.pro || {};
+    $("#proPlanLabel").textContent = pro.active
+      ? `Pro · ${pro.plan || "active"}`
+      : `Free · ${pro.reason || "no entitlement"}`;
+  });
+}
+
 document.addEventListener("DOMContentLoaded", () => {
   bindAppearanceInputs();
+  bindProInputs();
   $("#save").addEventListener("click", save);
   load();
+  loadProSection();
 });

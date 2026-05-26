@@ -1,7 +1,7 @@
 {
   "manifest_version": 3,
   "name": "Smartii",
-  "version": "1.0.6",
+  "version": "1.1.0",
   "description": "Summon an AI assistant at the bottom of your browser, screenshot the page, and get instant answers from your favorite model.",
   "permissions": [
     "storage",
@@ -52,6 +52,13 @@
         "default": "Alt+Shift+S"
       },
       "description": "Screenshot the page and solve immediately"
+    },
+    "godmode": {
+      "suggested_key": {
+        "default": "Ctrl+Shift+G",
+        "mac": "Command+Shift+G"
+      },
+      "description": "Godmode — auto-solve everything visible on screen (Pro)"
     }
   },
   "web_accessible_resources": [
