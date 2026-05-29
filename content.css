@@ -376,3 +376,98 @@
   0%, 80%, 100% { opacity: 0.3; transform: scale(0.85); }
   40%           { opacity: 1;   transform: scale(1.25); }
 }
+
+/* ─────────────────────────────────────────────────────────────
+   Stealth answer tooltip — a small floating chip used when
+   "stealth answers" is on (and in disguise mode).
+   ───────────────────────────────────────────────────────────── */
+#smartii-tip {
+  all: initial;
+  position: fixed;
+  z-index: 2147483647;
+  max-width: 300px;
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+  font-size: 12.5px;
+  line-height: 1.45;
+  color: #f5f5f7;
+  background: #0f0f14;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 10px;
+  padding: 8px 11px;
+  box-shadow: 0 12px 32px rgba(0, 0, 0, 0.45);
+  white-space: pre-wrap;
+  word-break: break-word;
+  cursor: pointer;
+  opacity: 0;
+  pointer-events: none;
+  transform: translateY(4px);
+  transition: opacity 150ms ease, transform 150ms ease;
+}
+#smartii-tip.smartii-tip-show {
+  opacity: 0.96;
+  pointer-events: auto;
+  transform: translateY(0);
+}
+
+/* ─────────────────────────────────────────────────────────────
+   Equation rendering (lightweight) — inline fractions, roots.
+   ───────────────────────────────────────────────────────────── */
+.smartii-output .smartii-frac {
+  display: inline-flex;
+  flex-direction: column;
+  vertical-align: middle;
+  text-align: center;
+  line-height: 1.05;
+  font-size: 0.9em;
+  margin: 0 0.15em;
+}
+.smartii-output .smartii-frac sup,
+.smartii-output .smartii-frac sub {
+  display: block;
+  padding: 0 0.35em;
+  font-size: 1em;
+}
+.smartii-output .smartii-frac sup { border-bottom: 1px solid currentColor; }
+.smartii-output .smartii-root { border-top: 1px solid currentColor; padding: 0 0.15em; }
+
+/* ─────────────────────────────────────────────────────────────
+   Disguise mode — the bar masquerades as a cookie-consent banner.
+   Real controls are hidden; Smartii is driven by keyboard shortcuts
+   and answers surface via the stealth tooltip.
+   ───────────────────────────────────────────────────────────── */
+.smartii-cookie { display: none; }
+
+#smartii-root.smartii-disguise .smartii-card {
+  background: #f4f5f7 !important;
+  color: #3c4043 !important;
+  border: 1px solid rgba(0, 0, 0, 0.12) !important;
+  box-shadow: 0 6px 24px rgba(0, 0, 0, 0.14) !important;
+  backdrop-filter: none !important;
+  -webkit-backdrop-filter: none !important;
+}
+#smartii-root.smartii-disguise .smartii-row,
+#smartii-root.smartii-disguise .smartii-status,
+#smartii-root.smartii-disguise .smartii-actions,
+#smartii-root.smartii-disguise .smartii-output {
+  display: none !important;
+}
+#smartii-root.smartii-disguise .smartii-cookie {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 18px;
+  padding: 14px 18px;
+  font-size: 13px;
+  color: #3c4043;
+}
+.smartii-cookie-text { flex: 1; }
+.smartii-cookie-btns { display: inline-flex; align-items: center; gap: 10px; white-space: nowrap; }
+.smartii-cookie-btns b {
+  background: #1a73e8;
+  color: #fff;
+  padding: 6px 16px;
+  border-radius: 6px;
+  font-weight: 600;
+  cursor: pointer;
+}
+.smartii-cookie-btns span { color: #5f6368; cursor: pointer; }

@@ -4,6 +4,13 @@ A backlog of things Smartii could do. Ordered roughly by value-to-effort.
 Items marked ✅ already shipped.
 
 ## Shipped recently
+- ✅ **Panic key** (`Alt+Shift+X` or double-`Esc`) — instantly hides everything and wipes the last answer + history.
+- ✅ **Auto-hide after fill** — bar closes itself a couple seconds after Godmode fills.
+- ✅ **Disguise mode** — bar masquerades as a cookie-consent banner; controls hidden, keyboard-driven, tooltip answers.
+- ✅ **Stealth answers** — answers appear as a small floating tooltip near the field instead of the bar.
+- ✅ **Auto-submit after fill** — clicks the page's submit/"done" button after filling (multilingual match).
+- ✅ **Equation rendering** — lightweight LaTeX-ish: fractions, powers, roots, common math symbols.
+- ✅ **Follow-up context** — typed questions carry recent Q&A so you can ask "why?" without re-screenshotting.
 - ✅ **Godmode auto-fill (agentic)** — when the page has fillable fields,
   Godmode enumerates them, sends the screenshot + field manifest to the model,
   gets back JSON, and types the answers straight into the inputs (React/Vue-safe

@@ -22,7 +22,11 @@ const DEFAULTS = {
     width: 720,
     cornerRadius: 18,
     bottomOffset: 24,
-    schoolMode: false      // discreet: no backgrounds/shadows/loader, faint text only
+    schoolMode: false,     // discreet: no backgrounds/shadows/loader, faint text only
+    disguise: false,       // skin the bar as a cookie-consent banner
+    stealthAnswers: false, // show answers as a small tooltip near the field, not the bar
+    autoHide: false,       // auto-close the bar a moment after Godmode fills
+    autoSubmit: false      // click the page's submit button after Godmode fills
   },
   systemPrompt:
     "You are Smartii, a fast, helpful assistant. The user pressed a keybind to summon you. If an image of the user's screen is attached, read everything visible (questions, code, errors, UI) and directly solve or answer it. Be concise unless asked otherwise."
@@ -75,6 +79,8 @@ chrome.commands.onCommand.addListener(async (command) => {
   if (!tab?.id) return;
   if (command === "toggle-smartii") {
     sendToTab(tab.id, { type: "TOGGLE" });
+  } else if (command === "panic") {
+    sendToTab(tab.id, { type: "PANIC" });
   } else if (command === "solve-now") {
     sendToTab(tab.id, { type: "SOLVE_NOW" });
   } else if (command === "godmode") {

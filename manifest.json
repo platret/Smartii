@@ -1,7 +1,7 @@
 {
   "manifest_version": 3,
   "name": "Smartii",
-  "version": "1.5.1",
+  "version": "1.6.0",
   "description": "Summon an AI assistant at the bottom of your browser, screenshot the page, and get instant answers from your favorite model.",
   "permissions": [
     "storage",
@@ -59,6 +59,12 @@
         "default": "Alt+Shift+G"
       },
       "description": "Godmode — auto-solve & auto-fill everything on screen (Pro)"
+    },
+    "panic": {
+      "suggested_key": {
+        "default": "Alt+Shift+X"
+      },
+      "description": "Panic — instantly hide Smartii and wipe the last answer"
     }
   },
   "web_accessible_resources": [

@@ -17,9 +17,12 @@
   let settings = null;
   let root, input, sendBtn, snapBtn, settingsBtn, closeBtn, output, statusEl, providerLabel;
   let actionsEl, copyBtn;
-  let pill;
+  let pill, tip;
   let pendingRequest = false;
   let lastAnswer = "";
+  let lastEscAt = 0;            // for double-Esc panic
+  let convo = [];              // recent {q, a} turns for follow-up context
+  let tipTimer = null;
 
   async function loadSettings() {
     const res = await chrome.runtime.sendMessage({ type: "GET_SETTINGS" });
@@ -37,12 +40,13 @@
     root.classList.toggle("smartii-solid", a.theme === "solid");
     root.classList.toggle("smartii-clear", a.theme === "clear");
     root.classList.toggle("smartii-stealth", !!a.schoolMode);
+    root.classList.toggle("smartii-disguise", !!a.disguise);
     if (pill) {
       pill.style.setProperty("--smartii-accent", a.accent);
       pill.style.setProperty("--smartii-bottom", a.bottomOffset + "px");
       pill.classList.toggle("smartii-solid", a.theme === "solid");
       pill.classList.toggle("smartii-clear", a.theme === "clear");
-      pill.classList.toggle("smartii-stealth", !!a.schoolMode);
+      pill.classList.toggle("smartii-stealth", !!a.schoolMode || !!a.disguise);
     }
     if (providerLabel) providerLabel.textContent = settings.provider;
   }
@@ -55,6 +59,10 @@
     root.className = "smartii-solid";
     root.innerHTML = `
       <div class="smartii-card">
+        <div class="smartii-cookie" data-smartii-cookie>
+          <span class="smartii-cookie-text">🍪 This site uses cookies to enhance your experience.</span>
+          <span class="smartii-cookie-btns"><b data-smartii-cookie-ok>Accept</b> · <span>Reject</span></span>
+        </div>
         <div class="smartii-row">
           <div class="smartii-logo">
             <img src="${logoUrl}" alt="Smartii" />
@@ -92,6 +100,19 @@
       // Reopen the bar but keep the in-flight indicator visible inside it.
       openBar();
       setStatus("Thinking...");
+    });
+
+    // Stealth answer tooltip — a tiny floating chip used when "stealth answers"
+    // is on (and in disguise mode). Anchored near a field or screen corner.
+    tip = document.createElement("div");
+    tip.id = "smartii-tip";
+    document.documentElement.appendChild(tip);
+    tip.addEventListener("click", () => hideTip());
+
+    // In disguise mode "Accept" just dismisses the fake cookie banner.
+    root.querySelector("[data-smartii-cookie-ok]")?.addEventListener("click", (e) => {
+      e.stopPropagation();
+      close();
     });
 
     input = root.querySelector(".smartii-input");
@@ -136,15 +157,33 @@
         close();
       }
     });
+
+    // Double-tap Escape anywhere on the page = panic (instant hide + wipe).
+    document.addEventListener(
+      "keydown",
+      (e) => {
+        if (e.key !== "Escape") return;
+        const now = Date.now();
+        if (now - lastEscAt < 500) {
+          panic();
+          lastEscAt = 0;
+        } else {
+          lastEscAt = now;
+        }
+      },
+      true
+    );
   }
 
   // --- visibility helpers ---
 
   function openBar() {
     if (!root) build();
+    root.style.display = ""; // clear any panic hard-hide
     pill?.classList.remove("smartii-pill-show");
     root.classList.add("smartii-open");
-    setTimeout(() => input?.focus(), 50);
+    // In disguise mode there's no input to focus — it's all keybind-driven.
+    if (!settings?.appearance?.disguise) setTimeout(() => input?.focus(), 50);
   }
 
   function hideBar() {
@@ -154,6 +193,48 @@
   function close() {
     hideBar();
     pill?.classList.remove("smartii-pill-show");
+  }
+
+  // Panic: instantly nuke everything visible and wipe the last answer/history.
+  // No fade — display:none immediately so a glance catches nothing.
+  function panic() {
+    pendingRequest = false;
+    lastAnswer = "";
+    convo = [];
+    if (input) input.value = "";
+    setOutput("");
+    hideTip();
+    if (root) {
+      root.classList.remove("smartii-open");
+      root.style.display = "none";
+    }
+    pill?.classList.remove("smartii-pill-show");
+  }
+
+  // --- stealth answer tooltip ---
+
+  function showTip(text, anchorEl) {
+    if (!tip) build();
+    tip.textContent = text;
+    if (anchorEl && anchorEl.getBoundingClientRect) {
+      const r = anchorEl.getBoundingClientRect();
+      tip.style.left = Math.max(8, Math.min(r.left, window.innerWidth - 280)) + "px";
+      tip.style.top = Math.min(r.bottom + 6, window.innerHeight - 40) + "px";
+      tip.style.right = "auto";
+      tip.style.bottom = "auto";
+    } else {
+      tip.style.right = "18px";
+      tip.style.bottom = "18px";
+      tip.style.left = "auto";
+      tip.style.top = "auto";
+    }
+    tip.classList.add("smartii-tip-show");
+    clearTimeout(tipTimer);
+    tipTimer = setTimeout(hideTip, 9000);
+  }
+
+  function hideTip() {
+    tip?.classList.remove("smartii-tip-show");
   }
 
   function toggle() {
@@ -212,11 +293,40 @@
 
   function inline(s) {
     // s is already HTML-escaped.
+    return mathify(
+      s
+        .replace(/`([^`]+)`/g, "<code>$1</code>")
+        .replace(/\*\*([^*]+)\*\*/g, "<strong>$1</strong>")
+        .replace(/(^|[^*])\*([^*]+)\*/g, "$1<em>$2</em>")
+        .replace(/\[([^\]]+)\]\((https?:[^)\s]+)\)/g, '<a href="$1" target="_blank" rel="noopener">$1</a>')
+    );
+  }
+
+  // Lightweight equation rendering — handles the LaTeX/math the models actually
+  // emit for school work (fractions, powers, roots, common symbols) without
+  // bundling a full TeX engine. Input is already HTML-escaped.
+  function mathify(s) {
+    if (!/[\\^_]|\\frac|\\sqrt/.test(s)) return s;
     return s
-      .replace(/`([^`]+)`/g, "<code>$1</code>")
-      .replace(/\*\*([^*]+)\*\*/g, "<strong>$1</strong>")
-      .replace(/(^|[^*])\*([^*]+)\*/g, "$1<em>$2</em>")
-      .replace(/\[([^\]]+)\]\((https?:[^)\s]+)\)/g, '<a href="$1" target="_blank" rel="noopener">$1</a>');
+      // strip math delimiters \( \) \[ \]
+      .replace(/\\[()[\]]/g, "")
+      // \frac{a}{b}
+      .replace(/\\frac\s*\{([^{}]*)\}\s*\{([^{}]*)\}/g,
+        '<span class="smartii-frac"><sup>$1</sup><sub>$2</sub></span>')
+      // \sqrt{x}
+      .replace(/\\sqrt\s*\{([^{}]*)\}/g, "&radic;<span class=\"smartii-root\">$1</span>")
+      // superscripts / subscripts
+      .replace(/\^\{([^{}]*)\}/g, "<sup>$1</sup>")
+      .replace(/\^(-?[0-9A-Za-z]+)/g, "<sup>$1</sup>")
+      .replace(/_\{([^{}]*)\}/g, "<sub>$1</sub>")
+      .replace(/_(-?[0-9A-Za-z]+)/g, "<sub>$1</sub>")
+      // common symbols
+      .replace(/\\cdot/g, "·").replace(/\\times/g, "×").replace(/\\div/g, "÷")
+      .replace(/\\pm/g, "±").replace(/\\leq?\b/g, "≤").replace(/\\geq?\b/g, "≥")
+      .replace(/\\neq\b/g, "≠").replace(/\\approx\b/g, "≈").replace(/\\infty\b/g, "∞")
+      .replace(/\\pi\b/g, "π").replace(/\\theta\b/g, "θ").replace(/\\Delta\b/g, "Δ")
+      .replace(/\\(?:to|rightarrow)\b/g, "→").replace(/\\Rightarrow\b/g, "⇒")
+      .replace(/\\left|\\right/g, "");
   }
 
   function renderMarkdown(md) {
@@ -330,9 +440,22 @@
           "\n</page>";
       }
 
+      // Follow-up: a typed question (no screenshot) carries the recent Q&A so
+      // the user can ask "explain step 2" without re-capturing.
+      let sendPrompt = prompt;
+      if (!includeScreenshot && userPrompt && convo.length) {
+        const history = convo
+          .slice(-3)
+          .map((t) => `Q: ${t.q}\nA: ${t.a}`)
+          .join("\n\n");
+        sendPrompt =
+          "Earlier in this conversation:\n" + history +
+          "\n\nFollow-up question: " + userPrompt;
+      }
+
       const res = await chrome.runtime.sendMessage({
         type: "SOLVE",
-        prompt,
+        prompt: sendPrompt,
         imageDataUrl,
         provider: settings.provider,
         model: settings.model
@@ -343,9 +466,19 @@
 
       if (!res?.ok) throw new Error(res?.error || "unknown error");
 
-      openBar();
-      setStatus("");
-      setAnswer(res.answer);
+      // Remember the turn for follow-ups (cap history).
+      convo.push({ q: userPrompt || "(screen)", a: res.answer });
+      if (convo.length > 6) convo.shift();
+
+      if (stealthAnswersOn()) {
+        // Don't open the bar — drop a discreet tooltip in the corner.
+        lastAnswer = res.answer;
+        showTip(res.answer, null);
+      } else {
+        openBar();
+        setStatus("");
+        setAnswer(res.answer);
+      }
       if (input) input.value = "";
     } catch (err) {
       pendingRequest = false;
@@ -552,6 +685,36 @@
     return n;
   }
 
+  function stealthAnswersOn() {
+    const a = settings?.appearance || {};
+    return !!a.stealthAnswers || !!a.disguise;
+  }
+
+  // After filling, optionally click the page's submit button. Prefer a submit
+  // inside the same form as the filled fields; fall back to a button whose text
+  // looks like "submit / done / check" (multilingual).
+  function autoSubmit(fields) {
+    const SUBMIT_RE =
+      /\b(submit|send|done|finish|check|verify|continue|next|ok|fertig|abgeben|prüfen|weiter|absenden|bestätigen|valider|enviar|comprobar)\b/i;
+    const forms = new Set(fields.map((f) => f.el.form).filter(Boolean));
+    const candidates = [];
+    for (const form of forms) {
+      candidates.push(...form.querySelectorAll('button, input[type="submit"], input[type="button"]'));
+    }
+    if (!candidates.length) {
+      candidates.push(...document.querySelectorAll('button, input[type="submit"]'));
+    }
+    const pick = candidates.find((b) => {
+      const label = (b.value || b.innerText || b.getAttribute("aria-label") || "").trim();
+      return SUBMIT_RE.test(label);
+    }) || candidates.find((b) => (b.type || "").toLowerCase() === "submit");
+    if (pick) {
+      pick.click();
+      return true;
+    }
+    return false;
+  }
+
   // The model is asked for strict JSON, but be tolerant of code fences / stray
   // prose around it.
   function parseFillJson(text) {
@@ -609,16 +772,38 @@
       hidePill();
       if (!res?.ok) throw new Error(res?.error || "unknown error");
 
-      openBar();
-      setStatus("");
+      const a = settings.appearance || {};
       const parsed = parseFillJson(res.answer);
+
       if (parsed && Array.isArray(parsed.fills) && parsed.fills.length) {
         const n = applyFills(fields, parsed.fills);
-        const note = parsed.note ? parsed.note.trim() + "\n\n" : "";
-        setAnswer(note + `**✓ Filled ${n} field${n === 1 ? "" : "s"}** on the page.`);
+        const note = parsed.note ? parsed.note.trim() : "";
+        const summary = (note ? note + "\n\n" : "") + `**✓ Filled ${n} field${n === 1 ? "" : "s"}** on the page.`;
+
+        if (a.autoSubmit) {
+          // small beat so framework state settles before submitting
+          setTimeout(() => autoSubmit(fields), 250);
+        }
+
+        if (stealthAnswersOn()) {
+          lastAnswer = note || res.answer;
+          if (note) showTip(note, fields[parsed.fills[0]?.i]?.el || null);
+        } else {
+          openBar();
+          setStatus("");
+          setAnswer(summary);
+          if (a.autoHide) setTimeout(close, 2000);
+        }
       } else {
         // Model didn't return usable JSON — show whatever it said.
-        setAnswer(res.answer);
+        if (stealthAnswersOn()) {
+          lastAnswer = res.answer;
+          showTip(res.answer, null);
+        } else {
+          openBar();
+          setStatus("");
+          setAnswer(res.answer);
+        }
       }
     } catch (err) {
       pendingRequest = false;
@@ -658,9 +843,16 @@
       pendingRequest = false;
       hidePill();
       if (!res?.ok) throw new Error(res?.error || "unknown error");
-      openBar();
-      setStatus("");
-      setAnswer(res.answer);
+      convo.push({ q: "(screen)", a: res.answer });
+      if (convo.length > 6) convo.shift();
+      if (stealthAnswersOn()) {
+        lastAnswer = res.answer;
+        showTip(res.answer, null);
+      } else {
+        openBar();
+        setStatus("");
+        setAnswer(res.answer);
+      }
     } catch (err) {
       pendingRequest = false;
       hidePill();
@@ -694,6 +886,8 @@
       godmode();
     } else if (msg.type === "GODMODE_LOCKED") {
       godmodeLocked(msg.reason);
+    } else if (msg.type === "PANIC") {
+      panic();
     } else if (msg.type === "SETTINGS_UPDATED") {
       loadSettings();
     }

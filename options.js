@@ -11,7 +11,11 @@ const DEFAULTS = {
     width: 720,
     cornerRadius: 18,
     bottomOffset: 24,
-    schoolMode: false
+    schoolMode: false,
+    disguise: false,
+    stealthAnswers: false,
+    autoHide: false,
+    autoSubmit: false
   },
   systemPrompt:
     "You are Smartii, a fast, helpful assistant. The user pressed a keybind to summon you. If an image of the user's screen is attached, read everything visible (questions, code, errors, UI) and directly solve or answer it. Be concise unless asked otherwise."
@@ -74,6 +78,10 @@ function renderAppearance() {
   $("#cornerRadius").value = a.cornerRadius;
   $("#bottomOffset").value = a.bottomOffset;
   $("#schoolMode").checked = !!a.schoolMode;
+  $("#disguise").checked = !!a.disguise;
+  $("#stealthAnswers").checked = !!a.stealthAnswers;
+  $("#autoHide").checked = !!a.autoHide;
+  $("#autoSubmit").checked = !!a.autoSubmit;
   $("#systemPrompt").value = state.systemPrompt;
 }
 
@@ -84,6 +92,10 @@ function bindAppearanceInputs() {
   $("#cornerRadius").addEventListener("input", (e) => (state.appearance.cornerRadius = +e.target.value || 0));
   $("#bottomOffset").addEventListener("input", (e) => (state.appearance.bottomOffset = +e.target.value || 0));
   $("#schoolMode").addEventListener("change", (e) => (state.appearance.schoolMode = e.target.checked));
+  $("#disguise").addEventListener("change", (e) => (state.appearance.disguise = e.target.checked));
+  $("#stealthAnswers").addEventListener("change", (e) => (state.appearance.stealthAnswers = e.target.checked));
+  $("#autoHide").addEventListener("change", (e) => (state.appearance.autoHide = e.target.checked));
+  $("#autoSubmit").addEventListener("change", (e) => (state.appearance.autoSubmit = e.target.checked));
   $("#systemPrompt").addEventListener("input", (e) => (state.systemPrompt = e.target.value));
   $("#apiKey").addEventListener("input", (e) => {
     state.apiKeys[state.provider] = e.target.value;
