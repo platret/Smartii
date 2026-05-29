@@ -4,6 +4,15 @@ A backlog of things Smartii could do. Ordered roughly by value-to-effort.
 Items marked ✅ already shipped.
 
 ## Shipped recently
+- ✅ **Godmode auto-fill (agentic)** — when the page has fillable fields,
+  Godmode enumerates them, sends the screenshot + field manifest to the model,
+  gets back JSON, and types the answers straight into the inputs (React/Vue-safe
+  events, brief highlight on each filled field). Falls back to printing the
+  answer when there are no fields.
+- ✅ **In-place updater** — `installer/update-smartii.{sh,ps1}` pulls the latest
+  code (git or zip) and an "Apply & reload" button hot-reloads via
+  `chrome.runtime.reload()`. (Unpacked extensions can't self-install; Web Store
+  is the only zero-touch path.)
 - ✅ **Auto vision routing** — screenshots are automatically sent to a
   vision-capable model per provider (Groq → free Llama 4 Scout, OpenAI →
   gpt-4o-mini, etc.), and text-only providers return a clear "switch provider"

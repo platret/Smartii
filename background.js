@@ -162,6 +162,15 @@ chrome.runtime.onMessage.addListener((msg, sender, sendResponse) => {
         sendResponse({ ok: true, update: await self.smartiiCheckUpdate({ force: msg.force }) });
         return;
       }
+      if (msg.type === "RELOAD_EXTENSION") {
+        // Hot-reload from disk. After an external `git pull` (or replacing the
+        // folder's files), this loads the new code instantly — no trip to
+        // chrome://extensions. chrome.runtime.reload() restarts the extension
+        // using whatever is currently on disk.
+        sendResponse({ ok: true });
+        setTimeout(() => chrome.runtime.reload(), 150);
+        return;
+      }
       if (msg.type === "SIGN_IN") {
         sendResponse(await self.smartiiSignIn(msg.email));
         return;

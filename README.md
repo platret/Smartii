@@ -210,6 +210,8 @@ No build step. No bundler. Edit a file, reload the extension.
 
 - **Godmode** (`Ctrl+Shift+G`) — one keybind, no typing needed. Smartii reads the
   full screen, identifies every question/problem/error on it, and answers them all directly.
+  When the page has fillable fields (quiz inputs, forms), Godmode **types the answers
+  straight into them** instead of just printing the solution.
 - Cloud sync of settings across browsers (planned).
 - Priority rollouts of new providers.
 
@@ -226,7 +228,8 @@ yourself if you want to fork Smartii.
 - **Backend** — `supabase/`. Migrations + a Stripe webhook Edge Function.
   Full setup steps in [`supabase/README.md`](supabase/README.md).
 - **Extension** — fill `lib/config.js` with your Supabase URL + anon key. With those
-  blank, Godmode is locked but everything else works.
+  blank, Godmode is locked behind the Pro gate — but you can flip
+  **Settings → "Unlock Godmode locally"** to use it on your own device without any backend.
 
 ---
 

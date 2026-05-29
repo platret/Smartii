@@ -356,20 +356,215 @@
 
   // --- message routing ---
 
+  // Godmode prompt: pure auto-solve, no user input. Tells the model to read
+  // EVERYTHING on screen and answer directly — useful for quizzes, homework,
+  // code traces, error dialogs, anything visible.
+  const GOD_PROMPT =
+    "GODMODE: read the entire attached screenshot of the user's screen. " +
+    "Identify the most important question, problem, code, error, or task on screen and " +
+    "answer it directly and completely. If there are multiple questions, answer all of them, " +
+    "numbered. If it's a multiple-choice question, give the correct letter AND the reasoning. " +
+    "If it's code or an error, show the fix. Be precise. No filler.";
+
   async function godmode() {
     if (!settings) await loadSettings();
     if (!root) build();
     if (input) input.value = "";
-    // Godmode prompt: pure auto-solve, no user input. Tells the model to read
-    // EVERYTHING on screen and answer directly — useful for quizzes, homework,
-    // code traces, error dialogs, anything visible.
-    const godPrompt =
-      "GODMODE: read the entire attached screenshot of the user's screen. " +
-      "Identify the most important question, problem, code, error, or task on screen and " +
-      "answer it directly and completely. If there are multiple questions, answer all of them, " +
-      "numbered. If it's a multiple-choice question, give the correct letter AND the reasoning. " +
-      "If it's code or an error, show the fix. Be precise. No filler.";
-    await solveWithPrompt(godPrompt, true);
+    // If the page has fields the user could type into, Godmode fills them in
+    // directly instead of just printing the answer. Otherwise it falls back to
+    // the classic read-and-answer behavior.
+    const fields = collectFillableFields();
+    if (fields.length) {
+      await godmodeFill(fields);
+      return;
+    }
+    await solveWithPrompt(GOD_PROMPT, true);
+  }
+
+  // --- Godmode auto-fill (agentic) ----------------------------------------
+
+  function clip(s, n) {
+    s = String(s || "").replace(/\s+/g, " ").trim();
+    return s.length > n ? s.slice(0, n) + "…" : s;
+  }
+
+  // Find inputs/textareas/selects/contenteditable that are on screen, enabled,
+  // and not part of Smartii's own UI. Index order is the contract with the model.
+  function collectFillableFields() {
+    const sel =
+      'input, textarea, select, [contenteditable=""], [contenteditable="true"]';
+    const skipTypes = [
+      "hidden", "submit", "button", "image", "file", "reset",
+      "checkbox", "radio", "range", "color"
+    ];
+    const out = [];
+    for (const el of document.querySelectorAll(sel)) {
+      if (el.closest("#smartii-root, #smartii-pill")) continue;
+      const tag = el.tagName.toLowerCase();
+      const type = (el.getAttribute("type") || "").toLowerCase();
+      if (tag === "input" && skipTypes.includes(type)) continue;
+      if (el.disabled || el.readOnly) continue;
+      const r = el.getBoundingClientRect();
+      if (r.width < 4 || r.height < 4) continue;
+      // Only fields inside the captured viewport (the screenshot is what the
+      // model sees, so anything off-screen has no visual context).
+      if (r.bottom <= 0 || r.top >= innerHeight || r.right <= 0 || r.left >= innerWidth) continue;
+      const st = getComputedStyle(el);
+      if (st.visibility === "hidden" || st.display === "none" || +st.opacity === 0) continue;
+      out.push({ i: out.length, el, tag, type, ctx: describeField(el) });
+    }
+    return out;
+  }
+
+  function describeField(el) {
+    const bits = [];
+    let label;
+    if (el.id) {
+      const l = document.querySelector(`label[for="${CSS.escape(el.id)}"]`);
+      if (l) label = l.innerText;
+    }
+    if (!label) {
+      const wrap = el.closest("label");
+      if (wrap) label = wrap.innerText;
+    }
+    label =
+      label ||
+      el.getAttribute("aria-label") ||
+      el.getAttribute("placeholder") ||
+      el.name ||
+      el.getAttribute("title");
+    if (label) bits.push('label="' + clip(label, 80) + '"');
+    const near = el.parentElement?.innerText || "";
+    if (near && near.length < 200) bits.push('near="' + clip(near, 120) + '"');
+    const val = el.isContentEditable ? el.textContent : el.value;
+    if (val) bits.push('current="' + clip(val, 40) + '"');
+    return bits.join(" ") || "(no label)";
+  }
+
+  // React/Vue track value through the property setter, so set it the native way
+  // and fire input+change so the framework's state updates too.
+  function setNativeValue(el, value) {
+    const proto =
+      el.tagName === "TEXTAREA"
+        ? HTMLTextAreaElement.prototype
+        : HTMLInputElement.prototype;
+    const setter = Object.getOwnPropertyDescriptor(proto, "value")?.set;
+    if (setter) setter.call(el, value);
+    else el.value = value;
+  }
+
+  function flashField(el) {
+    const prevOutline = el.style.outline;
+    const prevOffset = el.style.outlineOffset;
+    el.style.outline = "2px solid var(--smartii-accent, #7c5cff)";
+    el.style.outlineOffset = "1px";
+    setTimeout(() => {
+      el.style.outline = prevOutline;
+      el.style.outlineOffset = prevOffset;
+    }, 1800);
+  }
+
+  function applyFills(fields, fills) {
+    let n = 0;
+    for (const f of fills) {
+      const field = fields[f && f.i];
+      if (!field) continue;
+      const el = field.el;
+      const value = String(f.value ?? "");
+      try {
+        el.focus({ preventScroll: true });
+        if (el.isContentEditable) {
+          el.textContent = value;
+        } else if (el.tagName === "SELECT") {
+          const opt = [...el.options].find(
+            (o) => o.value === value || o.text.trim() === value
+          );
+          if (!opt) continue;
+          el.value = opt.value;
+        } else {
+          setNativeValue(el, value);
+        }
+        el.dispatchEvent(new Event("input", { bubbles: true }));
+        el.dispatchEvent(new Event("change", { bubbles: true }));
+        flashField(el);
+        n++;
+      } catch (_) {
+        // skip a field we can't write to; keep going
+      }
+    }
+    return n;
+  }
+
+  // The model is asked for strict JSON, but be tolerant of code fences / stray
+  // prose around it.
+  function parseFillJson(text) {
+    if (!text) return null;
+    let t = text.trim().replace(/^```[a-z]*\s*/i, "").replace(/```\s*$/, "");
+    const start = t.indexOf("{");
+    const end = t.lastIndexOf("}");
+    if (start === -1 || end === -1 || end < start) return null;
+    try {
+      return JSON.parse(t.slice(start, end + 1));
+    } catch {
+      return null;
+    }
+  }
+
+  async function godmodeFill(fields) {
+    if (pendingRequest) return;
+    if (!settings) await loadSettings();
+
+    const manifest = fields
+      .map((f) => `#${f.i} <${f.tag}${f.type ? ":" + f.type : ""}> ${f.ctx}`)
+      .join("\n");
+    const prompt =
+      "GODMODE AUTO-FILL. A screenshot of the user's screen is attached. " +
+      "The page has these fillable fields (index → context, including any current value):\n" +
+      manifest +
+      "\n\nSolve everything shown on screen and decide what each field should contain. " +
+      'Respond with ONLY a JSON object — no markdown, no prose:\n' +
+      '{"fills":[{"i":0,"value":"3"}],"note":"one short line with the answer"}\n' +
+      'Use the integer field index in "i". "value" is the exact text to type into that field. ' +
+      "Only include fields you are confident about; omit any that should stay blank.";
+
+    pendingRequest = true;
+    setOutput("");
+    setStatus("");
+    hideBar();
+
+    try {
+      await new Promise((r) => setTimeout(r, 220));
+      const imageDataUrl = await captureScreen();
+      showPill();
+      const res = await chrome.runtime.sendMessage({
+        type: "SOLVE",
+        prompt,
+        imageDataUrl,
+        provider: settings.provider,
+        model: settings.model
+      });
+      pendingRequest = false;
+      hidePill();
+      if (!res?.ok) throw new Error(res?.error || "unknown error");
+
+      openBar();
+      setStatus("");
+      const parsed = parseFillJson(res.answer);
+      if (parsed && Array.isArray(parsed.fills) && parsed.fills.length) {
+        const n = applyFills(fields, parsed.fills);
+        const note = parsed.note ? parsed.note.trim() + "\n\n" : "";
+        setAnswer(note + `**✓ Filled ${n} field${n === 1 ? "" : "s"}** on the page.`);
+      } else {
+        // Model didn't return usable JSON — show whatever it said.
+        setAnswer(res.answer);
+      }
+    } catch (err) {
+      pendingRequest = false;
+      hidePill();
+      openBar();
+      setStatus("");
+      setOutput("Error: " + (err?.message || String(err)));
+    }
   }
 
   // Variant of solve() that takes a pre-built prompt and skips reading the input box.

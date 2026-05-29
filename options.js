@@ -190,6 +190,11 @@ async function loadUpdateSection() {
     const res = await chrome.runtime.sendMessage({ type: "CHECK_UPDATE", force: true });
     renderUpdate(res?.update);
   });
+  $("#reloadExt")?.addEventListener("click", async () => {
+    await chrome.runtime.sendMessage({ type: "RELOAD_EXTENSION" });
+    // The extension restarts; this page will lose its connection. Give feedback.
+    $("#updateStatus").textContent = "Reloading Smartii from disk…";
+  });
 }
 
 function bindProInputs() {

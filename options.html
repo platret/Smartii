@@ -16,7 +16,7 @@
           <p class="subtitle">Summon an AI at the bottom of your browser.</p>
         </div>
       </div>
-      <div class="version">v1.3.0</div>
+      <div class="version">v1.4.0</div>
     </header>
 
     <main>
@@ -136,6 +136,26 @@
           <a class="link-btn" id="updateLink" target="_blank" rel="noopener" hidden>Download latest →</a>
         </div>
         <p class="muted small" id="updateStatus"></p>
+
+        <details class="advanced" style="margin-top: 14px;">
+          <summary>Update in place (no zip) — for <code>git clone</code> installs</summary>
+          <p class="muted small">
+            Chrome won't let an extension overwrite its own files, so true silent
+            self-update isn't possible for unpacked installs. But if you installed
+            with <code>git clone</code>, you can update without downloading a zip:
+          </p>
+          <ol class="kbd-list" style="margin: 8px 0;">
+            <li><strong>Pull the latest code</strong> into the Smartii folder:<br />
+              <code>bash installer/update-smartii.sh</code>
+              <span class="muted small">(or <code>git pull</code>)</span>
+            </li>
+            <li>Click <strong>Apply &amp; reload</strong> below — the new code loads instantly.</li>
+          </ol>
+          <button class="link-btn" id="reloadExt">Apply &amp; reload now</button>
+          <p class="muted small">
+            For true zero-touch updates, install from the Chrome Web Store instead.
+          </p>
+        </details>
       </section>
 
       <section class="card">
