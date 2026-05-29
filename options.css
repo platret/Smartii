@@ -331,3 +331,32 @@ code {
   color: #ff7a8a;
   border-color: rgba(255, 122, 138, 0.3);
 }
+
+.selfhost {
+  margin-top: 18px;
+  padding-top: 16px;
+  border-top: 1px solid var(--border);
+}
+
+.selfhost-toggle {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  cursor: pointer;
+}
+
+.selfhost-toggle input {
+  width: 18px;
+  height: 18px;
+  margin-top: 2px;
+  accent-color: var(--accent, #7c5cff);
+  cursor: pointer;
+  flex: none;
+}
+
+.selfhost-toggle span {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  line-height: 1.4;
+}

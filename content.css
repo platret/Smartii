@@ -148,8 +148,68 @@
   display: block;
 }
 
+.smartii-output {
+  white-space: normal; /* markdown is rendered; let block elements flow */
+}
+
 .smartii-output a {
   color: var(--smartii-accent, #7c5cff);
+}
+
+.smartii-output p { margin: 0 0 10px; }
+.smartii-output p:last-child { margin-bottom: 0; }
+.smartii-output h3,
+.smartii-output h4,
+.smartii-output h5,
+.smartii-output h6 {
+  margin: 14px 0 6px;
+  font-size: 15px;
+  font-weight: 700;
+}
+.smartii-output ul,
+.smartii-output ol {
+  margin: 0 0 10px;
+  padding-left: 22px;
+}
+.smartii-output li { margin: 3px 0; }
+.smartii-output code {
+  font-family: ui-monospace, SFMono-Regular, "SF Mono", Menlo, Consolas, monospace;
+  font-size: 12.5px;
+  background: rgba(255, 255, 255, 0.08);
+  padding: 1px 5px;
+  border-radius: 5px;
+}
+.smartii-output pre {
+  background: rgba(0, 0, 0, 0.35);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 10px;
+  padding: 12px 14px;
+  overflow-x: auto;
+  margin: 0 0 10px;
+}
+.smartii-output pre code {
+  background: none;
+  padding: 0;
+  font-size: 12.5px;
+  line-height: 1.5;
+  white-space: pre;
+}
+
+/* Answer action bar (Copy) */
+.smartii-actions {
+  display: none;
+  justify-content: flex-end;
+  padding: 0 14px;
+  margin-top: 2px;
+}
+
+.smartii-actions.smartii-show {
+  display: flex;
+}
+
+.smartii-btn.smartii-copy {
+  padding: 5px 12px;
+  font-size: 12px;
 }
 
 .smartii-status {

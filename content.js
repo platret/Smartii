@@ -16,8 +16,10 @@
 
   let settings = null;
   let root, input, sendBtn, snapBtn, settingsBtn, closeBtn, output, statusEl, providerLabel;
+  let actionsEl, copyBtn;
   let pill;
   let pendingRequest = false;
+  let lastAnswer = "";
 
   async function loadSettings() {
     const res = await chrome.runtime.sendMessage({ type: "GET_SETTINGS" });
@@ -65,6 +67,9 @@
           <button class="smartii-btn smartii-ghost" data-smartii-close title="Close (Esc)">&times;</button>
         </div>
         <div class="smartii-status" data-smartii-status></div>
+        <div class="smartii-actions" data-smartii-actions>
+          <button class="smartii-btn smartii-ghost smartii-copy" data-smartii-copy title="Copy answer">Copy</button>
+        </div>
         <div class="smartii-output" data-smartii-output></div>
       </div>
     `;
@@ -95,6 +100,19 @@
     output = root.querySelector("[data-smartii-output]");
     statusEl = root.querySelector("[data-smartii-status]");
     providerLabel = root.querySelector("[data-smartii-provider]");
+    actionsEl = root.querySelector("[data-smartii-actions]");
+    copyBtn = root.querySelector("[data-smartii-copy]");
+
+    copyBtn?.addEventListener("click", async () => {
+      try {
+        await navigator.clipboard.writeText(lastAnswer || "");
+        copyBtn.textContent = "Copied ✓";
+        setTimeout(() => (copyBtn.textContent = "Copy"), 1400);
+      } catch (_) {
+        copyBtn.textContent = "Copy failed";
+        setTimeout(() => (copyBtn.textContent = "Copy"), 1400);
+      }
+    });
 
     sendBtn.addEventListener("click", () => solve(false));
     snapBtn.addEventListener("click", () => solve(true));
@@ -157,10 +175,104 @@
     statusEl.classList.toggle("smartii-show", !!text);
   }
 
+  // Plain error / status text — no markdown, no copy affordance.
   function setOutput(text) {
     if (!output) return;
-    output.textContent = text || "";
+    lastAnswer = text || "";
+    output.textContent = lastAnswer;
     output.classList.toggle("smartii-show", !!text);
+    actionsEl?.classList.remove("smartii-show");
+  }
+
+  // Model answers arrive as markdown. Render a safe subset (code blocks,
+  // inline code, bold/italic, headings, lists, links) and reveal the Copy
+  // button. Everything is HTML-escaped before any formatting is applied.
+  function setAnswer(md) {
+    if (!output) return;
+    lastAnswer = md || "";
+    if (!md) {
+      output.textContent = "";
+      output.classList.remove("smartii-show");
+      actionsEl?.classList.remove("smartii-show");
+      return;
+    }
+    output.innerHTML = renderMarkdown(md);
+    output.classList.add("smartii-show");
+    actionsEl?.classList.add("smartii-show");
+  }
+
+  function escapeHtml(s) {
+    return s
+      .replace(/&/g, "&amp;")
+      .replace(/</g, "&lt;")
+      .replace(/>/g, "&gt;");
+  }
+
+  function inline(s) {
+    // s is already HTML-escaped.
+    return s
+      .replace(/`([^`]+)`/g, "<code>$1</code>")
+      .replace(/\*\*([^*]+)\*\*/g, "<strong>$1</strong>")
+      .replace(/(^|[^*])\*([^*]+)\*/g, "$1<em>$2</em>")
+      .replace(/\[([^\]]+)\]\((https?:[^)\s]+)\)/g, '<a href="$1" target="_blank" rel="noopener">$1</a>');
+  }
+
+  function renderMarkdown(md) {
+    const escaped = escapeHtml(md);
+    // Pull fenced code blocks out first so their contents aren't formatted.
+    const blocks = [];
+    const withoutCode = escaped.replace(/```[a-z]*\n?([\s\S]*?)```/gi, (_, code) => {
+      blocks.push(code.replace(/\n$/, ""));
+      return " " + (blocks.length - 1) + " ";
+    });
+
+    const lines = withoutCode.split("\n");
+    const html = [];
+    let listType = null; // "ul" | "ol" | null
+
+    const closeList = () => {
+      if (listType) {
+        html.push(`</${listType}>`);
+        listType = null;
+      }
+    };
+
+    for (const raw of lines) {
+      const line = raw.replace(/\r$/, "");
+      const codePh = /^ (\d+) $/.exec(line.trim());
+      if (codePh) {
+        closeList();
+        html.push("<pre><code>" + blocks[Number(codePh[1])] + "</code></pre>");
+        continue;
+      }
+      const h = /^(#{1,4})\s+(.*)$/.exec(line);
+      if (h) {
+        closeList();
+        const lvl = Math.min(h[1].length + 2, 6); // # -> h3
+        html.push(`<h${lvl}>${inline(h[2])}</h${lvl}>`);
+        continue;
+      }
+      const ol = /^\s*\d+\.\s+(.*)$/.exec(line);
+      const ul = /^\s*[-*]\s+(.*)$/.exec(line);
+      if (ol) {
+        if (listType !== "ol") { closeList(); html.push("<ol>"); listType = "ol"; }
+        html.push("<li>" + inline(ol[1]) + "</li>");
+        continue;
+      }
+      if (ul) {
+        if (listType !== "ul") { closeList(); html.push("<ul>"); listType = "ul"; }
+        html.push("<li>" + inline(ul[1]) + "</li>");
+        continue;
+      }
+      if (line.trim() === "") {
+        closeList();
+        continue;
+      }
+      closeList();
+      html.push("<p>" + inline(line) + "</p>");
+    }
+    closeList();
+    return html.join("");
   }
 
   // --- helpers ---
@@ -191,18 +303,20 @@
     setOutput("");
     setStatus("");
 
-    // Bar goes away immediately; pill takes its place. Keeps the bar out
-    // of the screenshot and gives the user the page back while the model thinks.
+    // Bar goes away immediately; gives the user the page back while the model
+    // thinks. For screenshot mode we hold the pill until *after* capture so it
+    // never lands in the shot — otherwise the model "sees" our own UI.
     hideBar();
-    showPill();
+    if (!includeScreenshot) showPill();
 
     try {
       let imageDataUrl;
       let prompt = userPrompt;
       if (includeScreenshot) {
-        // Give the browser a tick to actually render the hidden bar.
+        // Give the browser a tick to actually clear the hidden bar.
         await new Promise((r) => setTimeout(r, 220));
         imageDataUrl = await captureScreen();
+        showPill();
         if (!prompt) {
           prompt = "Read the attached screenshot of the user's screen and solve / answer whatever is shown. Be direct.";
         }
@@ -229,7 +343,7 @@
 
       openBar();
       setStatus("");
-      setOutput(res.answer);
+      setAnswer(res.answer);
       if (input) input.value = "";
     } catch (err) {
       pendingRequest = false;
@@ -268,13 +382,14 @@
     setOutput("");
     setStatus("");
     hideBar();
-    showPill();
+    if (!includeScreenshot) showPill();
 
     try {
       let imageDataUrl;
       if (includeScreenshot) {
         await new Promise((r) => setTimeout(r, 220));
         imageDataUrl = await captureScreen();
+        showPill();
       }
       const res = await chrome.runtime.sendMessage({
         type: "SOLVE",
@@ -288,7 +403,7 @@
       if (!res?.ok) throw new Error(res?.error || "unknown error");
       openBar();
       setStatus("");
-      setOutput(res.answer);
+      setAnswer(res.answer);
     } catch (err) {
       pendingRequest = false;
       hidePill();

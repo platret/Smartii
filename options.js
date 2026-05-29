@@ -140,6 +140,20 @@ async function loadProSection() {
   }
 }
 
+async function loadSelfHostToggle() {
+  const box = $("#proOverride");
+  if (!box) return;
+  const { smartiiProOverride } = await chrome.storage.local.get("smartiiProOverride");
+  box.checked = !!smartiiProOverride;
+  box.addEventListener("change", async () => {
+    await chrome.storage.local.set({ smartiiProOverride: box.checked });
+    // Bust the 6h Pro cache so Godmode unlocks/locks immediately.
+    await chrome.storage.local.remove("smartiiProCache");
+    await chrome.runtime.sendMessage({ type: "CHECK_PRO", force: true });
+    loadProSection();
+  });
+}
+
 function bindProInputs() {
   $("#proSignIn")?.addEventListener("click", async () => {
     const email = $("#proEmail").value.trim();
@@ -170,4 +184,5 @@ document.addEventListener("DOMContentLoaded", () => {
   $("#save").addEventListener("click", save);
   load();
   loadProSection();
+  loadSelfHostToggle();
 });

@@ -4,13 +4,13 @@
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
   <title>Smartii — AI at the bottom of your browser</title>
-  <meta name="description" content="Press a key, screenshot the page, get the answer. Smartii is a Chrome extension that summons an AI assistant on any website. Free to use. Pro unlocks Godmode." />
+  <meta name="description" content="Press a key, screenshot the page, get the answer. Smartii summons an AI assistant on any website in Chrome, Edge, Brave or Arc. Free, bring-your-own-key. Pro unlocks Godmode." />
 
   <link rel="icon" href="assets/icon128.png" />
   <link rel="apple-touch-icon" href="assets/icon128.png" />
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@500&display=swap" rel="stylesheet" />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&family=JetBrains+Mono:wght@500;600&display=swap" rel="stylesheet" />
   <link rel="stylesheet" href="styles.css" />
 
   <meta property="og:title" content="Smartii — AI at the bottom of your browser" />
@@ -19,123 +19,204 @@
   <meta name="twitter:card" content="summary_large_image" />
 </head>
 <body>
-  <header class="nav">
-    <a class="brand" href="#top">
-      <img src="assets/icon128.png" alt="" width="32" height="32" />
+  <div class="bg-aurora" aria-hidden="true"></div>
+  <div class="bg-grid" aria-hidden="true"></div>
+
+  <header class="nav" id="nav">
+    <a class="brand" href="#top" aria-label="Smartii home">
+      <img src="assets/icon128.png" alt="" width="30" height="30" />
       <span>Smartii</span>
     </a>
-    <nav class="nav-links">
+    <nav class="nav-links" aria-label="Primary">
       <a href="#features">Features</a>
       <a href="#godmode">Godmode</a>
       <a href="#pricing">Pricing</a>
-      <a href="#donate">Donate</a>
       <a href="#account">Account</a>
-      <a class="nav-cta" href="https://github.com/platret/Smartii/releases/latest" target="_blank" rel="noopener">Install</a>
     </nav>
+    <a class="nav-cta" href="https://github.com/platret/Smartii/releases/latest" target="_blank" rel="noopener">
+      Install free
+    </a>
   </header>
 
-  <main>
-    <section class="hero" id="top">
-      <div class="hero-inner">
-        <span class="eyebrow">Chrome · Edge · Brave · Arc · any Chromium</span>
+  <main id="top">
+    <!-- ───────────────────────── HERO ───────────────────────── -->
+    <section class="hero">
+      <div class="hero-copy">
+        <span class="eyebrow">
+          <span class="dot" aria-hidden="true"></span>
+          Chrome · Edge · Brave · Arc · any Chromium
+        </span>
         <h1>
-          AI at the bottom of your browser.
+          AI at the bottom<br />of your browser.
           <span class="grad">Press a key. Get the answer.</span>
         </h1>
         <p class="lead">
           Smartii is a tiny extension that summons an assistant bar on any page.
-          Type a question, or screenshot what's on screen and let the model solve it.
+          Type a question — or screenshot what's on screen and let the model solve it.
           Works with free providers (Gemini, Groq, OpenRouter) and paid ones (Claude, ChatGPT).
         </p>
         <div class="hero-ctas">
           <a class="btn primary" href="https://github.com/platret/Smartii/releases/latest" target="_blank" rel="noopener">
-            ↓ Install free
+            <svg viewBox="0 0 24 24" class="ico" aria-hidden="true"><path d="M12 3v12m0 0 4-4m-4 4-4-4M5 21h14"/></svg>
+            Install free
           </a>
-          <a class="btn ghost" href="#pricing">Get Pro · ⚡ Godmode</a>
+          <a class="btn ghost" href="#godmode">
+            <svg viewBox="0 0 24 24" class="ico" aria-hidden="true"><path d="M13 2 4.5 13.5H11l-1 8.5L19.5 10H13z"/></svg>
+            See Godmode
+          </a>
         </div>
-        <div class="kbd-row">
-          <kbd>Ctrl</kbd>+<kbd>Shift</kbd>+<kbd>S</kbd>
-          <span class="sep">summon</span>
-          <kbd>Alt</kbd>+<kbd>Shift</kbd>+<kbd>S</kbd>
-          <span class="sep">solve screen</span>
-          <kbd>Ctrl</kbd>+<kbd>Shift</kbd>+<kbd>G</kbd>
-          <span class="pill">Godmode</span>
+        <div class="kbd-row" role="list">
+          <span class="kbd-combo" role="listitem">
+            <kbd>Ctrl</kbd><kbd>Shift</kbd><kbd>S</kbd>
+            <span class="kbd-label">summon</span>
+          </span>
+          <span class="kbd-combo" role="listitem">
+            <kbd>Alt</kbd><kbd>Shift</kbd><kbd>S</kbd>
+            <span class="kbd-label">solve screen</span>
+          </span>
+          <span class="kbd-combo gold" role="listitem">
+            <kbd>Ctrl</kbd><kbd>Shift</kbd><kbd>G</kbd>
+            <span class="kbd-label">Godmode</span>
+          </span>
         </div>
       </div>
+
+      <!-- live HTML mock of the product, not a static image -->
       <div class="hero-art">
-        <img src="assets/banner.png" alt="Smartii in action" />
+        <div class="window" aria-hidden="true">
+          <div class="window-bar">
+            <span class="traffic r"></span><span class="traffic y"></span><span class="traffic g"></span>
+            <div class="window-url">exam.university.edu/quiz/midterm</div>
+          </div>
+          <div class="window-body">
+            <p class="q"><b>Q7.</b> What is the time complexity of binary search on a sorted array?</p>
+            <ul class="choices">
+              <li>A) O(n)</li>
+              <li>B) O(n log n)</li>
+              <li class="hit">C) O(log n)</li>
+              <li>D) O(1)</li>
+            </ul>
+            <div class="smartii-mock">
+              <img src="assets/icon128.png" alt="" width="26" height="26" />
+              <div class="mock-answer">
+                <span class="mock-tag">⚡ Godmode</span>
+                <b>C) O(log n)</b> — each step halves the search space, so it takes
+                at most log₂n comparisons.
+              </div>
+            </div>
+          </div>
+        </div>
       </div>
     </section>
 
+    <!-- ───────────────────────── LOGOS / TRUST ───────────────────────── -->
+    <section class="strip" aria-label="Supported providers">
+      <span>Works with</span>
+      <ul>
+        <li>Gemini</li><li>Groq</li><li>OpenRouter</li><li>Hugging&nbsp;Face</li>
+        <li>Claude</li><li>ChatGPT</li><li>Perplexity</li>
+      </ul>
+    </section>
+
+    <!-- ───────────────────────── FEATURES ───────────────────────── -->
     <section class="features" id="features">
-      <h2>Why Smartii</h2>
+      <div class="section-head">
+        <span class="eyebrow">Why Smartii</span>
+        <h2>An assistant that lives where you work.</h2>
+        <p>No new tab. No copy-paste. Just a keystroke on whatever page you're already on.</p>
+      </div>
       <div class="grid-3">
         <article class="card">
-          <div class="emoji">⌨️</div>
+          <div class="ico-box">
+            <svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="5" width="18" height="14" rx="2"/><path d="M7 9h.01M11 9h.01M15 9h.01M7 13h10"/></svg>
+          </div>
           <h3>Keybind, not a tab</h3>
-          <p>One shortcut on any page. The bar appears at the bottom — read the page in the background while it works.</p>
+          <p>One shortcut on any page. The bar appears at the bottom — keep reading while it works.</p>
         </article>
         <article class="card">
-          <div class="emoji">📸</div>
+          <div class="ico-box">
+            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 7a2 2 0 0 1 2-2h2l1.5-2h7L19 5h2a2 2 0 0 1 2 2"/><rect x="1" y="7" width="22" height="14" rx="2"/><circle cx="12" cy="14" r="3.5"/></svg>
+          </div>
           <h3>Sees what you see</h3>
-          <p>Press Solve, Smartii screenshots the visible page and sends it to the model. Homework, errors, UIs — anything visual.</p>
+          <p>Hit Solve — Smartii screenshots the visible page and sends it to the model. Homework, errors, UIs, anything visual.</p>
         </article>
         <article class="card">
-          <div class="emoji">🔑</div>
+          <div class="ico-box">
+            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M21 2l-2 2m-7.5 7.5L15 8m-3.5 3.5a4 4 0 1 1-5.66 5.66 4 4 0 0 1 5.66-5.66zM15 8l3 3"/></svg>
+          </div>
           <h3>Your key, your data</h3>
-          <p>BYO API key. Keys live in your browser's encrypted sync storage. No backend by default. Free providers supported.</p>
+          <p>Bring your own API key. Keys live in your browser's encrypted sync storage. No backend by default.</p>
         </article>
         <article class="card">
-          <div class="emoji">🎛️</div>
+          <div class="ico-box">
+            <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M3 12h18M12 3a15 15 0 0 1 0 18M12 3a15 15 0 0 0 0 18"/></svg>
+          </div>
           <h3>7 providers in one</h3>
           <p>Gemini, Groq, OpenRouter, Hugging Face, Claude, ChatGPT, Perplexity. Switch with a click.</p>
         </article>
         <article class="card">
-          <div class="emoji">🎨</div>
+          <div class="ico-box">
+            <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="13.5" cy="6.5" r="2.5"/><circle cx="6.5" cy="12" r="2.5"/><circle cx="17" cy="14" r="2.5"/><path d="M12 21a9 9 0 1 1 9-9"/></svg>
+          </div>
           <h3>Fits your vibe</h3>
-          <p>Solid or glass theme. Accent color, width, radius — all tunable.</p>
+          <p>Solid or glass theme. Accent color, width, radius — all tunable from a one-screen settings page.</p>
         </article>
-        <article class="card">
-          <div class="emoji">⚡</div>
-          <h3>Godmode (Pro)</h3>
-          <p>One press → Smartii reads the screen and answers everything, no typing needed. Quizzes, exams, code errors, anything.</p>
+        <article class="card highlight">
+          <div class="ico-box gold">
+            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M13 2 4.5 13.5H11l-1 8.5L19.5 10H13z"/></svg>
+          </div>
+          <h3>Godmode <span class="tag">Pro</span></h3>
+          <p>One press → Smartii reads the screen and answers everything, no typing. Quizzes, exams, code errors, anything.</p>
         </article>
       </div>
     </section>
 
+    <!-- ───────────────────────── GODMODE ───────────────────────── -->
     <section class="godmode" id="godmode">
+      <div class="godmode-glow" aria-hidden="true"></div>
       <div class="godmode-inner">
-        <span class="eyebrow gold">⚡ Pro Feature</span>
-        <h2>Godmode <span class="grad">does it all for you.</span></h2>
-        <p class="lead">
-          Hit <kbd>Ctrl</kbd>+<kbd>Shift</kbd>+<kbd>G</kbd>. Smartii screenshots the page, identifies
-          every question, problem, error, or task on screen, and answers them all — directly, completely,
-          without you typing a word.
-        </p>
-        <ul class="check-list">
-          <li>✅ Multiple-choice: gives the correct letter <em>and</em> reasoning</li>
-          <li>✅ Code or error: gives the fix</li>
-          <li>✅ Forms / quizzes: numbered answers in order</li>
-          <li>✅ Visual puzzles: reads the image too</li>
-        </ul>
+        <div class="godmode-copy">
+          <span class="eyebrow gold">⚡ Pro feature</span>
+          <h2>Godmode <span class="grad-gold">does it all for you.</span></h2>
+          <p class="lead">
+            Hit <span class="kbd-combo gold inline"><kbd>Ctrl</kbd><kbd>Shift</kbd><kbd>G</kbd></span>.
+            Smartii screenshots the page, finds every question, problem, error or task on screen,
+            and answers them all — directly, completely, without you typing a word.
+          </p>
+          <ul class="check-list">
+            <li><svg viewBox="0 0 24 24" class="chk" aria-hidden="true"><path d="m5 13 4 4L19 7"/></svg>Multiple-choice: the correct letter <em>and</em> the reasoning</li>
+            <li><svg viewBox="0 0 24 24" class="chk" aria-hidden="true"><path d="m5 13 4 4L19 7"/></svg>Code or error: the actual fix, ready to paste</li>
+            <li><svg viewBox="0 0 24 24" class="chk" aria-hidden="true"><path d="m5 13 4 4L19 7"/></svg>Forms &amp; quizzes: every answer, numbered in order</li>
+            <li><svg viewBox="0 0 24 24" class="chk" aria-hidden="true"><path d="m5 13 4 4L19 7"/></svg>Visual puzzles: it reads the image too</li>
+          </ul>
+          <a class="btn primary" href="#pricing">Unlock Godmode</a>
+        </div>
+        <div class="godmode-art" aria-hidden="true">
+          <div class="god-press"><kbd>Ctrl</kbd><kbd>Shift</kbd><kbd>G</kbd></div>
+          <svg class="god-bolt" viewBox="0 0 24 24"><path d="M13 2 4.5 13.5H11l-1 8.5L19.5 10H13z"/></svg>
+        </div>
       </div>
     </section>
 
+    <!-- ───────────────────────── PRICING ───────────────────────── -->
     <section class="pricing" id="pricing">
-      <h2>Pricing</h2>
-      <p class="muted">Free is free forever. Pro is monthly. Cancel anytime, no email gymnastics.</p>
+      <div class="section-head">
+        <span class="eyebrow">Pricing</span>
+        <h2>Free forever. Pro when you want more.</h2>
+        <p>Cancel anytime, no email gymnastics.</p>
+      </div>
 
       <div class="grid-2">
         <article class="card price-card">
           <h3>Free</h3>
           <div class="price">$0<span>/mo</span></div>
           <ul class="check-list">
-            <li>✓ Bar + screenshot solving</li>
-            <li>✓ All 7 providers</li>
-            <li>✓ Bring your own API key</li>
-            <li>✓ MIT-licensed source</li>
+            <li><svg viewBox="0 0 24 24" class="chk" aria-hidden="true"><path d="m5 13 4 4L19 7"/></svg>Bar + screenshot solving</li>
+            <li><svg viewBox="0 0 24 24" class="chk" aria-hidden="true"><path d="m5 13 4 4L19 7"/></svg>All 7 providers</li>
+            <li><svg viewBox="0 0 24 24" class="chk" aria-hidden="true"><path d="m5 13 4 4L19 7"/></svg>Bring your own API key</li>
+            <li><svg viewBox="0 0 24 24" class="chk" aria-hidden="true"><path d="m5 13 4 4L19 7"/></svg>MIT-licensed source</li>
           </ul>
-          <a class="btn primary" href="https://github.com/platret/Smartii/releases/latest" target="_blank" rel="noopener">↓ Install</a>
+          <a class="btn ghost" href="https://github.com/platret/Smartii/releases/latest" target="_blank" rel="noopener">Install</a>
         </article>
 
         <article class="card price-card highlight">
@@ -143,43 +224,45 @@
           <h3>Pro</h3>
           <div class="price">$4.99<span>/mo</span></div>
           <ul class="check-list">
-            <li>✓ Everything in Free</li>
-            <li>✓ <strong>Godmode</strong> — auto-solve everything visible</li>
-            <li>✓ Cloud sync across browsers</li>
-            <li>✓ Priority new-provider rollouts</li>
-            <li>✓ Cancel anytime</li>
+            <li><svg viewBox="0 0 24 24" class="chk" aria-hidden="true"><path d="m5 13 4 4L19 7"/></svg>Everything in Free</li>
+            <li><svg viewBox="0 0 24 24" class="chk" aria-hidden="true"><path d="m5 13 4 4L19 7"/></svg><strong>Godmode</strong> — auto-solve everything visible</li>
+            <li><svg viewBox="0 0 24 24" class="chk" aria-hidden="true"><path d="m5 13 4 4L19 7"/></svg>Cloud sync across browsers</li>
+            <li><svg viewBox="0 0 24 24" class="chk" aria-hidden="true"><path d="m5 13 4 4L19 7"/></svg>Priority new-provider rollouts</li>
           </ul>
 
           <div id="pricingTableMount">
             <stripe-pricing-table id="stripeTable"></stripe-pricing-table>
           </div>
           <p class="muted small" id="pricingFallback" hidden>
-            Stripe is not configured yet. Edit <code>docs/config.js</code> with your Pricing Table ID.
+            Stripe isn't configured yet. Edit <code>docs/config.js</code> with your Pricing Table ID.
           </p>
         </article>
       </div>
-    </section>
 
-    <section class="donate" id="donate">
-      <div class="card donate-card">
-        <h2>Just want to say thanks?</h2>
-        <p class="muted">
-          Smartii is free and open source. If it saved you time, drop a few bucks — it
-          buys API credits for the free providers we test against.
-        </p>
-        <div class="donate-amounts" id="donateAmounts">
-          <button data-amount="3">$3</button>
-          <button data-amount="5">$5</button>
-          <button data-amount="10">$10</button>
-          <button data-amount="25">$25</button>
+      <!-- ───────────────────────── DONATE ───────────────────────── -->
+      <div class="card donate-card" id="donate">
+        <div>
+          <h3>Just want to say thanks?</h3>
+          <p class="muted">
+            Smartii is free and open source. If it saved you time, drop a few bucks —
+            it buys API credits for the free providers we test against.
+          </p>
         </div>
-        <p class="muted small" id="donateFallback" hidden>
-          Donations are not configured yet. Edit <code>docs/config.js</code> with your
-          Stripe Payment Link.
-        </p>
+        <div class="donate-side">
+          <div class="donate-amounts" id="donateAmounts">
+            <button data-amount="3">$3</button>
+            <button data-amount="5">$5</button>
+            <button data-amount="10">$10</button>
+            <button data-amount="25">$25</button>
+          </div>
+          <p class="muted small" id="donateFallback" hidden>
+            Donations aren't configured yet. Edit <code>docs/config.js</code> with your Stripe Payment Link.
+          </p>
+        </div>
       </div>
     </section>
 
+    <!-- ───────────────────────── ACCOUNT ───────────────────────── -->
     <section class="account" id="account">
       <div class="card account-card">
         <h2>Your account</h2>
@@ -189,7 +272,7 @@
             <input type="email" id="acctEmail" placeholder="you@example.com" required autocomplete="email" />
             <button class="btn primary" type="submit">Send magic link</button>
           </form>
-          <p class="muted small" id="acctStatus"></p>
+          <p class="muted small" id="acctStatus" aria-live="polite"></p>
         </div>
         <div id="acctSignedIn" hidden>
           <p>Signed in as <strong id="acctEmailLabel"></strong></p>
@@ -202,22 +285,26 @@
       </div>
     </section>
 
+    <!-- ───────────────────────── INSTALL ───────────────────────── -->
     <section class="install" id="install">
-      <h2>Install in 60 seconds</h2>
+      <div class="section-head">
+        <span class="eyebrow">Setup</span>
+        <h2>Install in 60 seconds.</h2>
+      </div>
       <ol class="steps">
-        <li><strong>Download</strong> the latest release from <a href="https://github.com/platret/Smartii/releases/latest" target="_blank" rel="noopener">GitHub Releases</a>.</li>
-        <li><strong>Unzip</strong> the archive (or run the macOS / Windows installer).</li>
-        <li>Open <code>chrome://extensions</code>, turn on <em>Developer mode</em>.</li>
-        <li>Click <em>Load unpacked</em> → pick the Smartii folder.</li>
-        <li>Pick a provider, paste your API key — done.</li>
+        <li><span class="step-n">1</span><div><strong>Download</strong> the latest release from <a href="https://github.com/platret/Smartii/releases/latest" target="_blank" rel="noopener">GitHub Releases</a>.</div></li>
+        <li><span class="step-n">2</span><div><strong>Unzip</strong> the archive (or run the macOS / Windows installer).</div></li>
+        <li><span class="step-n">3</span><div>Open <code>chrome://extensions</code> and turn on <em>Developer mode</em>.</div></li>
+        <li><span class="step-n">4</span><div>Click <em>Load unpacked</em> → pick the Smartii folder.</div></li>
+        <li><span class="step-n">5</span><div>Pick a provider, paste your API key — done.</div></li>
       </ol>
     </section>
   </main>
 
   <footer>
     <div class="footer-inner">
-      <div>
-        <img src="assets/icon128.png" alt="" width="28" height="28" />
+      <div class="footer-brand">
+        <img src="assets/icon128.png" alt="" width="26" height="26" />
         <span>Smartii · MIT licensed · <a href="https://github.com/platret/Smartii" target="_blank" rel="noopener">github.com/platret/Smartii</a></span>
       </div>
       <div class="footer-links">

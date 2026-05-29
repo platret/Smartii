@@ -203,3 +203,13 @@ async function renderAccount() {
 
   renderAccount();
 })();
+
+// --- Sticky nav: fade in the blurred backdrop once the page scrolls --------
+
+(function stickyNav() {
+  const nav = document.getElementById("nav");
+  if (!nav) return;
+  const onScroll = () => nav.classList.toggle("scrolled", window.scrollY > 12);
+  onScroll();
+  window.addEventListener("scroll", onScroll, { passive: true });
+})();
