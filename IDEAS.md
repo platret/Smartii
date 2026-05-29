@@ -4,6 +4,13 @@ A backlog of things Smartii could do. Ordered roughly by value-to-effort.
 Items marked ✅ already shipped.
 
 ## Shipped recently
+- ✅ **Auto vision routing** — screenshots are automatically sent to a
+  vision-capable model per provider (Groq → free Llama 4 Scout, OpenAI →
+  gpt-4o-mini, etc.), and text-only providers return a clear "switch provider"
+  error instead of a cryptic API failure.
+- ✅ **Update checker** — background alarm polls GitHub Releases every 30 min,
+  badges the toolbar icon, and offers a one-click download link (plus a
+  "Check now" button in settings).
 - ✅ **Markdown answers** — model output is rendered (code blocks, lists, bold,
   links) instead of raw text, so code is readable and copy-pasteable.
 - ✅ **Copy button** — one click copies the full answer to the clipboard.

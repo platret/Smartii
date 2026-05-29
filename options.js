@@ -154,6 +154,44 @@ async function loadSelfHostToggle() {
   });
 }
 
+// --- Update checker UI ---
+
+function renderUpdate(info) {
+  const status = $("#updateStatus");
+  const link = $("#updateLink");
+  if (!status || !link) return;
+  const cur = chrome.runtime.getManifest().version;
+  if (!info) {
+    status.textContent = `You're on v${cur}.`;
+    link.hidden = true;
+    return;
+  }
+  if (info.error) {
+    status.textContent = `Couldn't reach GitHub (${info.error}). You're on v${cur}.`;
+    link.hidden = true;
+    return;
+  }
+  if (info.available) {
+    status.textContent = `Update available — v${info.latest} (you have v${info.current}).`;
+    link.href = info.url;
+    link.textContent = `Download v${info.latest} →`;
+    link.hidden = false;
+  } else {
+    status.textContent = `You're up to date (v${info.current}).`;
+    link.hidden = true;
+  }
+}
+
+async function loadUpdateSection() {
+  const { smartiiUpdate } = await chrome.storage.local.get("smartiiUpdate");
+  renderUpdate(smartiiUpdate);
+  $("#checkUpdate")?.addEventListener("click", async () => {
+    $("#updateStatus").textContent = "Checking…";
+    const res = await chrome.runtime.sendMessage({ type: "CHECK_UPDATE", force: true });
+    renderUpdate(res?.update);
+  });
+}
+
 function bindProInputs() {
   $("#proSignIn")?.addEventListener("click", async () => {
     const email = $("#proEmail").value.trim();
@@ -185,4 +223,5 @@ document.addEventListener("DOMContentLoaded", () => {
   load();
   loadProSection();
   loadSelfHostToggle();
+  loadUpdateSection();
 });

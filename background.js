@@ -10,6 +10,7 @@
 importScripts("lib/config.js");
 importScripts("lib/providers.js");
 importScripts("lib/entitlement.js");
+importScripts("lib/update.js");
 
 const DEFAULTS = {
   provider: "gemini",
@@ -41,6 +42,20 @@ chrome.runtime.onInstalled.addListener(async ({ reason }) => {
     await chrome.storage.sync.set(DEFAULTS);
     chrome.runtime.openOptionsPage();
   }
+  if (reason === "update") {
+    // We're now running the new version — clear any stale "update available"
+    // badge from the previous version.
+    try { await chrome.action.setBadgeText({ text: "" }); } catch (_) {}
+  }
+  self.smartiiScheduleUpdateChecks();
+});
+
+// Re-arm the alarm after a browser restart (alarms survive, but a fresh check
+// on startup keeps the badge accurate).
+chrome.runtime.onStartup.addListener(() => self.smartiiScheduleUpdateChecks());
+
+chrome.alarms.onAlarm.addListener((alarm) => {
+  if (alarm.name === self.SMARTII_UPDATE.UPDATE_ALARM) self.smartiiCheckUpdate();
 });
 
 // Clicking the extension icon toggles the bar on the active tab.
@@ -141,6 +156,10 @@ chrome.runtime.onMessage.addListener((msg, sender, sendResponse) => {
       }
       if (msg.type === "CHECK_PRO") {
         sendResponse({ ok: true, pro: await self.smartiiCheckPro({ force: msg.force }) });
+        return;
+      }
+      if (msg.type === "CHECK_UPDATE") {
+        sendResponse({ ok: true, update: await self.smartiiCheckUpdate({ force: msg.force }) });
         return;
       }
       if (msg.type === "SIGN_IN") {
