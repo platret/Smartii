@@ -78,7 +78,7 @@ and click the ↻ button on the extension card.
 | --------------------------------- | ------------------------------------ | ---------------------------------------------------------- |
 | `Ctrl + Shift + S`                | `⌘ + Shift + S`                      | Toggle Smartii on the active tab                           |
 | `Alt + Shift + S`                 | `⌥ + Shift + S`                      | Screenshot the visible screen + solve immediately          |
-| `Ctrl + Shift + G`                | `⌘ + Shift + G`                      | **⚡ Godmode** — auto-solve everything visible (Pro)         |
+| `Alt + Shift + G`                 | `⌥ + Shift + G`                      | **⚡ Godmode** — auto-solve & auto-fill everything (Pro)     |
 | `Enter` in the input              | `Return` in the input                | Send your question (uses page text as context if empty)    |
 | `Ctrl + Enter` in the input       | `⌘ + Return` in the input            | Send your question **and** attach a screenshot             |
 | `Esc`                             | `Esc`                                | Close the bar                                              |
@@ -208,7 +208,7 @@ No build step. No bundler. Edit a file, reload the extension.
 
 **Smartii Pro ($4.99/mo)** adds:
 
-- **Godmode** (`Ctrl+Shift+G`) — one keybind, no typing needed. Smartii reads the
+- **Godmode** (`Alt+Shift+G`) — one keybind, no typing needed. Smartii reads the
   full screen, identifies every question/problem/error on it, and answers them all directly.
   When the page has fillable fields (quiz inputs, forms), Godmode **types the answers
   straight into them** instead of just printing the solution.

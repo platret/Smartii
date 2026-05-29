@@ -388,39 +388,70 @@
     return s.length > n ? s.slice(0, n) + "…" : s;
   }
 
-  // Find inputs/textareas/selects/contenteditable that are on screen, enabled,
-  // and not part of Smartii's own UI. Index order is the contract with the model.
+  const MAX_FIELDS = 120; // bound the prompt size on pathological pages
+
+  // Walk the WHOLE DOM (including same-origin iframes) for every fillable
+  // control — text inputs, textareas, dropdowns, contenteditable — whether or
+  // not it's currently scrolled into view, so Godmode never misses a field.
+  // We only drop controls that are genuinely unusable (hidden, disabled,
+  // zero-size) or part of Smartii's own UI. Index order is the contract with
+  // the model.
   function collectFillableFields() {
     const sel =
       'input, textarea, select, [contenteditable=""], [contenteditable="true"]';
     const skipTypes = [
-      "hidden", "submit", "button", "image", "file", "reset",
-      "checkbox", "radio", "range", "color"
+      "hidden", "submit", "button", "image", "file", "reset", "color"
+      // note: checkbox/radio ARE included now (handled specially on fill)
     ];
     const out = [];
-    for (const el of document.querySelectorAll(sel)) {
-      if (el.closest("#smartii-root, #smartii-pill")) continue;
-      const tag = el.tagName.toLowerCase();
-      const type = (el.getAttribute("type") || "").toLowerCase();
-      if (tag === "input" && skipTypes.includes(type)) continue;
-      if (el.disabled || el.readOnly) continue;
-      const r = el.getBoundingClientRect();
-      if (r.width < 4 || r.height < 4) continue;
-      // Only fields inside the captured viewport (the screenshot is what the
-      // model sees, so anything off-screen has no visual context).
-      if (r.bottom <= 0 || r.top >= innerHeight || r.right <= 0 || r.left >= innerWidth) continue;
-      const st = getComputedStyle(el);
-      if (st.visibility === "hidden" || st.display === "none" || +st.opacity === 0) continue;
-      out.push({ i: out.length, el, tag, type, ctx: describeField(el) });
+
+    const scan = (rootDoc) => {
+      let nodes;
+      try {
+        nodes = rootDoc.querySelectorAll(sel);
+      } catch (_) {
+        return; // cross-origin doc, skip
+      }
+      for (const el of nodes) {
+        if (out.length >= MAX_FIELDS) return;
+        if (el.closest("#smartii-root, #smartii-pill")) continue;
+        const tag = el.tagName.toLowerCase();
+        const type = (el.getAttribute("type") || "").toLowerCase();
+        if (tag === "input" && skipTypes.includes(type)) continue;
+        if (el.disabled || el.readOnly) continue;
+        const r = el.getBoundingClientRect();
+        // Keep zero-size only if it's not actually rendered-away; most real
+        // fields have a box. Truly hidden controls (display:none) report 0×0.
+        if (r.width < 2 && r.height < 2) continue;
+        const st = el.ownerDocument.defaultView?.getComputedStyle(el);
+        if (st && (st.visibility === "hidden" || st.display === "none" || +st.opacity === 0)) continue;
+        out.push({ i: out.length, el, tag, type, ctx: describeField(el) });
+      }
+    };
+
+    scan(document);
+    // Same-origin iframes (some quiz pages embed the form in one).
+    for (const frame of document.querySelectorAll("iframe")) {
+      if (out.length >= MAX_FIELDS) break;
+      let doc;
+      try {
+        doc = frame.contentDocument;
+      } catch (_) {
+        doc = null;
+      }
+      if (doc) scan(doc);
     }
     return out;
   }
 
   function describeField(el) {
     const bits = [];
+    const tag = el.tagName.toLowerCase();
+    const type = (el.getAttribute("type") || "").toLowerCase();
+
     let label;
     if (el.id) {
-      const l = document.querySelector(`label[for="${CSS.escape(el.id)}"]`);
+      const l = el.ownerDocument.querySelector(`label[for="${CSS.escape(el.id)}"]`);
       if (l) label = l.innerText;
     }
     if (!label) {
@@ -434,10 +465,22 @@
       el.name ||
       el.getAttribute("title");
     if (label) bits.push('label="' + clip(label, 80) + '"');
+
     const near = el.parentElement?.innerText || "";
-    if (near && near.length < 200) bits.push('near="' + clip(near, 120) + '"');
-    const val = el.isContentEditable ? el.textContent : el.value;
-    if (val) bits.push('current="' + clip(val, 40) + '"');
+    if (near && near.length < 220) bits.push('near="' + clip(near, 140) + '"');
+
+    if (tag === "select") {
+      // Give the model the exact option set so it can choose a valid one.
+      const opts = [...el.options].map((o) => clip(o.text, 50)).filter(Boolean);
+      if (opts.length) bits.push("options=[" + opts.map((o) => JSON.stringify(o)).join(",") + "]");
+      const sel = el.options[el.selectedIndex];
+      if (sel) bits.push('current="' + clip(sel.text, 50) + '"');
+    } else if (type === "checkbox" || type === "radio") {
+      bits.push("kind=" + type, "checked=" + (el.checked ? "true" : "false"));
+    } else {
+      const val = el.isContentEditable ? el.textContent : el.value;
+      if (val) bits.push('current="' + clip(val, 40) + '"');
+    }
     return bits.join(" ") || "(no label)";
   }
 
@@ -471,16 +514,28 @@
       if (!field) continue;
       const el = field.el;
       const value = String(f.value ?? "");
+      const type = (el.getAttribute("type") || "").toLowerCase();
       try {
         el.focus({ preventScroll: true });
         if (el.isContentEditable) {
           el.textContent = value;
         } else if (el.tagName === "SELECT") {
-          const opt = [...el.options].find(
-            (o) => o.value === value || o.text.trim() === value
-          );
+          const want = value.trim().toLowerCase();
+          const opt =
+            [...el.options].find((o) => o.value === value || o.text.trim() === value) ||
+            [...el.options].find(
+              (o) =>
+                o.value.toLowerCase() === want ||
+                o.text.trim().toLowerCase() === want ||
+                o.text.trim().toLowerCase().includes(want)
+            );
           if (!opt) continue;
           el.value = opt.value;
+        } else if (type === "checkbox" || type === "radio") {
+          const on = /^(true|1|yes|on|checked|x|✓)$/i.test(value.trim());
+          if (type === "radio" && !on) continue; // only the chosen radio gets set
+          el.checked = type === "radio" ? true : on;
+          el.dispatchEvent(new Event("click", { bubbles: true }));
         } else {
           setNativeValue(el, value);
         }
@@ -519,13 +574,18 @@
       .join("\n");
     const prompt =
       "GODMODE AUTO-FILL. A screenshot of the user's screen is attached. " +
-      "The page has these fillable fields (index → context, including any current value):\n" +
+      "Below is the COMPLETE list of fillable fields on the page (read straight from the " +
+      "DOM, so it includes fields that may be partly off-screen), each as " +
+      "`#index <tag:type> context`:\n" +
       manifest +
-      "\n\nSolve everything shown on screen and decide what each field should contain. " +
+      "\n\nSolve everything shown and decide what every field should contain. Rules:\n" +
+      "- Provide a value for EVERY field index above unless it genuinely must stay empty. Do not skip any.\n" +
+      '- For <select> fields, "value" MUST be one of the exact strings listed in that field\'s options=[...].\n' +
+      '- For checkbox/radio fields, use "value":"true" to tick it or "false" to leave it.\n' +
+      "- For a fraction laid out as separate numerator/denominator boxes, fill each box with its single number.\n" +
       'Respond with ONLY a JSON object — no markdown, no prose:\n' +
-      '{"fills":[{"i":0,"value":"3"}],"note":"one short line with the answer"}\n' +
-      'Use the integer field index in "i". "value" is the exact text to type into that field. ' +
-      "Only include fields you are confident about; omit any that should stay blank.";
+      '{"fills":[{"i":0,"value":"3"},{"i":1,"value":"29"}],"note":"one short line with the final answer"}\n' +
+      'Use the integer field index in "i". "value" is the exact text to put in that field.';
 
     pendingRequest = true;
     setOutput("");
