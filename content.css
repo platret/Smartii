@@ -230,6 +230,65 @@
   white-space: nowrap;
 }
 
+/* ─────────────────────────────────────────────────────────────
+   School mode (stealth) — strips all chrome so nothing reads as an
+   app at a glance: no card background, no border, no shadow, no blur,
+   no logo, no loading pill. Only faint text remains, with a hair of
+   text-shadow so it's legible on both light and dark pages. Everything
+   stays clickable and works exactly the same.
+   ───────────────────────────────────────────────────────────── */
+
+#smartii-root.smartii-stealth .smartii-card {
+  background: transparent !important;
+  box-shadow: none !important;
+  border: none !important;
+  backdrop-filter: none !important;
+  -webkit-backdrop-filter: none !important;
+}
+
+#smartii-root.smartii-stealth .smartii-logo,
+#smartii-root.smartii-stealth .smartii-meta {
+  display: none !important;
+}
+
+#smartii-root.smartii-stealth .smartii-btn {
+  background: transparent !important;
+  box-shadow: none !important;
+  filter: none !important;
+  color: rgba(128, 128, 138, 0.55) !important;
+  font-weight: 500 !important;
+}
+#smartii-root.smartii-stealth .smartii-btn:hover {
+  color: rgba(128, 128, 138, 0.95) !important;
+}
+
+#smartii-root.smartii-stealth .smartii-input {
+  color: rgba(128, 128, 138, 0.75) !important;
+}
+#smartii-root.smartii-stealth .smartii-input::placeholder {
+  color: rgba(128, 128, 138, 0.32) !important;
+}
+
+#smartii-root.smartii-stealth .smartii-output {
+  border-top: none !important;
+  text-shadow: 0 0 1px rgba(255, 255, 255, 0.45);
+}
+#smartii-root.smartii-stealth .smartii-output,
+#smartii-root.smartii-stealth .smartii-output * {
+  color: rgba(108, 108, 120, 0.95) !important;
+  border-color: transparent !important;
+}
+#smartii-root.smartii-stealth .smartii-output pre,
+#smartii-root.smartii-stealth .smartii-output code {
+  background: transparent !important;
+  border: none !important;
+}
+
+/* No loading pill in stealth — the answer just appears. */
+#smartii-pill.smartii-stealth {
+  display: none !important;
+}
+
 /* Thinking pill — appears in place of the bar while a request is in flight */
 
 #smartii-pill {

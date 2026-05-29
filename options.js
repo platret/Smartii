@@ -10,7 +10,8 @@ const DEFAULTS = {
     accent: "#7C5CFF",
     width: 720,
     cornerRadius: 18,
-    bottomOffset: 24
+    bottomOffset: 24,
+    schoolMode: false
   },
   systemPrompt:
     "You are Smartii, a fast, helpful assistant. The user pressed a keybind to summon you. If an image of the user's screen is attached, read everything visible (questions, code, errors, UI) and directly solve or answer it. Be concise unless asked otherwise."
@@ -72,6 +73,7 @@ function renderAppearance() {
   $("#width").value = a.width;
   $("#cornerRadius").value = a.cornerRadius;
   $("#bottomOffset").value = a.bottomOffset;
+  $("#schoolMode").checked = !!a.schoolMode;
   $("#systemPrompt").value = state.systemPrompt;
 }
 
@@ -81,6 +83,7 @@ function bindAppearanceInputs() {
   $("#width").addEventListener("input", (e) => (state.appearance.width = +e.target.value || 720));
   $("#cornerRadius").addEventListener("input", (e) => (state.appearance.cornerRadius = +e.target.value || 0));
   $("#bottomOffset").addEventListener("input", (e) => (state.appearance.bottomOffset = +e.target.value || 0));
+  $("#schoolMode").addEventListener("change", (e) => (state.appearance.schoolMode = e.target.checked));
   $("#systemPrompt").addEventListener("input", (e) => (state.systemPrompt = e.target.value));
   $("#apiKey").addEventListener("input", (e) => {
     state.apiKeys[state.provider] = e.target.value;

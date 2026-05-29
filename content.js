@@ -36,11 +36,13 @@
     root.style.setProperty("--smartii-bottom", a.bottomOffset + "px");
     root.classList.toggle("smartii-solid", a.theme === "solid");
     root.classList.toggle("smartii-clear", a.theme === "clear");
+    root.classList.toggle("smartii-stealth", !!a.schoolMode);
     if (pill) {
       pill.style.setProperty("--smartii-accent", a.accent);
       pill.style.setProperty("--smartii-bottom", a.bottomOffset + "px");
       pill.classList.toggle("smartii-solid", a.theme === "solid");
       pill.classList.toggle("smartii-clear", a.theme === "clear");
+      pill.classList.toggle("smartii-stealth", !!a.schoolMode);
     }
     if (providerLabel) providerLabel.textContent = settings.provider;
   }

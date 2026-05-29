@@ -21,7 +21,8 @@ const DEFAULTS = {
     accent: "#7C5CFF",
     width: 720,
     cornerRadius: 18,
-    bottomOffset: 24
+    bottomOffset: 24,
+    schoolMode: false      // discreet: no backgrounds/shadows/loader, faint text only
   },
   systemPrompt:
     "You are Smartii, a fast, helpful assistant. The user pressed a keybind to summon you. If an image of the user's screen is attached, read everything visible (questions, code, errors, UI) and directly solve or answer it. Be concise unless asked otherwise."
