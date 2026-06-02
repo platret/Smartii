@@ -1,0 +1,87 @@
+{
+  "templates": {
+    "task-state": {
+      "taskId": "",
+      "agentName": "",
+      "focusArea": "",
+      "userPrompt": "",
+      "status": "pending",
+      "assignedAt": "",
+      "startedAt": null,
+      "completedAt": null,
+      "progress": 0,
+      "currentOperation": null,
+      "dependencies": [],
+      "waitingFor": [],
+      "canStart": true,
+      "logs": [],
+      "filesCreated": [],
+      "filesModified": [],
+      "blockingQuestion": null,
+      "result": null,
+      "error": null,
+      "tokenUsage": {
+        "total": 0,
+        "operations": []
+      }
+    },
+    "topic": {
+      "slug": "",
+      "title": "",
+      "description": "",
+      "status": "in_progress",
+      "createdAt": "",
+      "lastActiveAt": "",
+      "completedAt": null,
+      "userRequest": "",
+      "tags": [],
+      "relatedFiles": [],
+      "tokenUsage": {
+        "total": 0,
+        "pmAgent": 0,
+        "subAgents": {},
+        "estimated": 0,
+        "savings": 0,
+        "savingsPercent": 0
+      }
+    },
+    "pm-state": {
+      "topicSlug": "",
+      "sessionId": "",
+      "userRequest": "",
+      "tasks": [],
+      "overallStatus": "in_progress",
+      "completedTasks": 0,
+      "totalTasks": 0,
+      "createdAt": "",
+      "tokenUsage": {
+        "pmTokens": 0,
+        "subAgentTokens": 0,
+        "totalTokens": 0
+      }
+    },
+    "task": {
+      "id": "",
+      "description": "",
+      "assignedTo": "",
+      "status": "pending",
+      "dependencies": [],
+      "waitingFor": [],
+      "canStart": true,
+      "startTime": null,
+      "completedTime": null,
+      "tokens": 0
+    },
+    "message": {
+      "id": "",
+      "type": "question",
+      "from": "",
+      "to": "pm-orchestrator",
+      "taskId": "",
+      "timestamp": "",
+      "content": "",
+      "status": "pending",
+      "response": null
+    }
+  }
+}

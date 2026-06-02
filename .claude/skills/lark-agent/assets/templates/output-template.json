@@ -1,0 +1,39 @@
+{
+  "testOverview": {
+    "title": "Example Test Title",
+    "description": "Brief description of the test",
+    "owner": "Test User",
+    "targetDate": "2025-11-02",
+    "startDate": "2025-10-19",
+    "status": "pending",
+    "larkTaskListId": null,
+    "parentTaskId": null,
+    "priority": "medium"
+  },
+  "scenarios": [
+    {
+      "scenarioId": "scenario-0-1234567890",
+      "title": "Test Scenario: Example Scenario",
+      "description": "Description of what this scenario tests",
+      "expectedOutcome": "Overall expected outcome",
+      "owner": "Test User",
+      "status": "pending",
+      "tasks": [
+        {
+          "taskId": "task-0-0-1234567890",
+          "title": "Task: Example Task",
+          "description": "Step 1, Step 2, Step 3",
+          "expectedResult": "Expected result for this task",
+          "status": "pending",
+          "notes": "",
+          "lark_task_id": null
+        }
+      ],
+      "lark_task_id": null
+    }
+  ],
+  "larkActionsCompleted": false,
+  "larkActionsCompletedAt": null,
+  "larksActions": "pending"
+}
+

@@ -1,0 +1,7 @@
+{
+  "name": "markdown-helper-skill",
+  "version": "1.0.0",
+  "type": "commonjs",
+  "description": "Token-efficient markdown parsing and manipulation skill",
+  "private": true
+}

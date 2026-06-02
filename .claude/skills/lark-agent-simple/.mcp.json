@@ -1,0 +1,28 @@
+{
+  "mcpServers": {
+    "lark-mcp": {
+      "command": "cmd",
+      "args": [
+        "/c",
+        "node",
+        "C:\\laragon\\www\\lark-openapi-mcp\\dist\\cli.js",
+        "mcp",
+        "-a", "cli_a879c59b40385029",
+        "-s", "KPLAtycoLfK23WVgKnnUIdc3pgeKMrt7",
+        "--domain", "https://open.larksuite.com",
+        "--oauth",
+        "--token-mode", "user_access_token",
+        "-t", "preset.task.full,preset.default"
+      ]
+    },
+    "Timezone": {
+      "command": "C:\\Windows\\System32\\cmd.exe",
+      "args": [
+        "/c",
+        "uvx",
+        "mcp-server-time",
+        "--local-timezone=Europe/Berlin"
+      ]
+    }
+  }
+}
